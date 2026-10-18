@@ -1,0 +1,193 @@
+{
+  "kind": "live synthetic end-to-end memory smoke test",
+  "public_benchmark": false,
+  "requested_model": "nvidia/nemotron-3.5-super-vl:free",
+  "checks": [
+    {
+      "check": "Natural message stores Jack and restaurant count with exact user sources",
+      "passed": true
+    },
+    {
+      "check": "Fresh Python process recalls stored facts",
+      "passed": true
+    },
+    {
+      "check": "Helper recalls another conversation's facts with graph citations",
+      "passed": true
+    },
+    {
+      "check": "Correction supersedes 2 with 3 and preserves history",
+      "passed": true
+    },
+    {
+      "check": "New Planner conversation uses the correction",
+      "passed": true
+    },
+    {
+      "check": "Planner saves graph evidence in its handoff",
+      "passed": true
+    },
+    {
+      "check": "Helper receives the handoff and latest memory without falsely completing work",
+      "passed": true
+    },
+    {
+      "check": "Another project cannot see these memories",
+      "passed": true
+    }
+  ],
+  "provider_calls": 10,
+  "status": "passed",
+  "memory_evidence": [
+    {
+      "id": "fact_108c6fb3b7706031e5a27029093ae9bef0d41866",
+      "kind": "semantic",
+      "recorded_at": "2026-10-18T15:25:55.481238+00:00",
+      "relation": "name",
+      "slot": "memory_6bd67564a459680c9ef2bb99fa42139c",
+      "source": {
+        "message": "msg_7aa4017d92dd73f4fa97c9d4cf60b248c90e781f",
+        "passage": "My name is Jack and I own 2 restaurants.",
+        "provenance": "user_assertion"
+      },
+      "subject": "user",
+      "supersedes": null,
+      "value": "Jack"
+    },
+    {
+      "id": "fact_20a23ed9590081550379866307feb18e55913b86",
+      "kind": "semantic",
+      "recorded_at": "2026-10-18T15:25:55.481324+00:00",
+      "relation": "restaurant_count",
+      "slot": "memory_1dddf294b47ac68822a05df6eaa530b5",
+      "source": {
+        "message": "msg_7aa4017d92dd73f4fa97c9d4cf60b248c90e781f",
+        "passage": "My name is Jack and I own 2 restaurants.",
+        "provenance": "user_assertion"
+      },
+      "subject": "user",
+      "supersedes": null,
+      "value": "2"
+    },
+    {
+      "id": "fact_b24b39676a3e1b0e661cc7c26419947c577cabcf",
+      "kind": "semantic",
+      "recorded_at": "2026-10-18T15:26:47.931767+00:00",
+      "relation": "restaurant_count",
+      "slot": "memory_1dddf294b47ac68822a05df6eaa530b5",
+      "source": {
+        "message": "msg_5498f2520d7c4552d16f11f97c5f9f25f565243c",
+        "passage": "I now own 3 restaurants.",
+        "provenance": "user_assertion"
+      },
+      "subject": "user",
+      "supersedes": "fact_20a23ed9590081550379866307feb18e55913b86",
+      "value": "3"
+    }
+  ],
+  "turn_evidence": [
+    {
+      "agent_role": "Planner",
+      "citations": [
+        "fact_b24b39676a3e1b0e661cc7c26419947c577cabcf"
+      ],
+      "handoff": null,
+      "id": "turn_3517f5afbf675d34b92e380fa63e17c52badadb9b4e7e7abbedabdca199d75fe",
+      "message": "msg_e6a3833f73ec88041de01a201058dd7b51cbe58f",
+      "provider": "OPENROUTER (nvidia/nemotron-3.5-lightning:free)",
+      "recorded_at": "2026-10-18T15:28:15.253381+00:00",
+      "reply": "You own 3 restaurants.",
+      "retrieved": [
+        "fact_108c6fb3b7706031e5a27029093ae9bef0d41866",
+        "fact_b24b39676a3e1b0e661cc7c26419947c577cabcf"
+      ],
+      "saved": [],
+      "suggested_task": "",
+      "thread": "third"
+    },
+    {
+      "agent_role": "Helper",
+      "citations": [
+        "fact_108c6fb3b7706031e5a27029093ae9bef0d41866",
+        "fact_20a23ed9590081550379866307feb18e55913b86"
+      ],
+      "handoff": null,
+      "id": "turn_6c9a59229de45748d932b47519a5e5b9a134ec535455d857b793d153aac21582",
+      "message": "msg_5ea4da41416f533d0014fe47f890625bab197f49",
+      "provider": "OPENROUTER (nvidia/nemotron-3.5-lightning:free)",
+      "recorded_at": "2026-10-18T15:26:44.607725+00:00",
+      "reply": "You are Jack, and you own 2 restaurants.",
+      "retrieved": [
+        "fact_108c6fb3b7706031e5a27029093ae9bef0d41866",
+        "fact_20a23ed9590081550379866307feb18e55913b86"
+      ],
+      "saved": [],
+      "suggested_task": "",
+      "thread": "second"
+    },
+    {
+      "agent_role": "Assistant",
+      "citations": [],
+      "handoff": null,
+      "id": "turn_719e31f293a031bcdc9672dc37f3f5377de50d9042fc06ef483902c047de0092",
+      "message": "msg_7aa4017d92dd73f4fa97c9d4cf60b248c90e781f",
+      "provider": "OPENROUTER (nvidia/nemotron-3.5-super-vl:free)",
+      "recorded_at": "2026-10-18T15:25:55.481334+00:00",
+      "reply": "Nice to meet you, Jack! Two restaurants sounds like a lot to manage. What kind of cuisine do they serve?",
+      "retrieved": [],
+      "saved": [
+        "fact_108c6fb3b7706031e5a27029093ae9bef0d41866",
+        "fact_20a23ed9590081550379866307feb18e55913b86"
+      ],
+      "suggested_task": "",
+      "thread": "first"
+    },
+    {
+      "agent_role": "Assistant",
+      "citations": [
+        "fact_20a23ed9590081550379866307feb18e55913b86"
+      ],
+      "handoff": null,
+      "id": "turn_e23444b80dd4fe8d06a15a94f254e1b6617dbf64ef6044fe13105b5b0535b56d",
+      "message": "msg_5498f2520d7c4552d16f11f97c5f9f25f565243c",
+      "provider": "OPENROUTER (nvidia/nemotron-3.5-super-vl:free)",
+      "recorded_at": "2026-10-18T15:26:47.931808+00:00",
+      "reply": "Got it \u2014 I've updated your restaurant count to 3. You're still Jack.",
+      "retrieved": [
+        "fact_108c6fb3b7706031e5a27029093ae9bef0d41866",
+        "fact_20a23ed9590081550379866307feb18e55913b86"
+      ],
+      "saved": [
+        "fact_b24b39676a3e1b0e661cc7c26419947c577cabcf"
+      ],
+      "suggested_task": "",
+      "thread": "second"
+    }
+  ],
+  "served_by": {
+    "last_served_by": "OPENROUTER (nvidia/nemotron-3.5-super-vl:free)",
+    "last_provider": "openrouter",
+    "last_model": "nvidia/nemotron-3.5-super-vl:free",
+    "fallbacks_triggered": 4,
+    "fallback_history": [
+      {
+        "candidate": "OPENROUTER (nvidia/nemotron-3.5-super-vl:free)",
+        "error": "JSONDecodeError"
+      },
+      {
+        "candidate": "GEMINI (gemini-3.8-flash)",
+        "error": "GoogleRateLimitError"
+      },
+      {
+        "candidate": "OPENROUTER (nvidia/nemotron-3.5-super-vl:free)",
+        "error": "JSONDecodeError"
+      },
+      {
+        "candidate": "GEMINI (gemini-3.8-flash)",
+        "error": "GoogleRateLimitError"
+      }
+    ]
+  },
+  "elapsed_seconds": 156.12,
+  "test_graph_deleted": true
+}

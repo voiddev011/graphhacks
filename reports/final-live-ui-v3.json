@@ -1,0 +1,82 @@
+{
+  "kind": "live Streamlit AppTest smoke",
+  "visual_browser_test": false,
+  "checks": [
+    {
+      "check": "Empty real profile loads without sample tasks",
+      "passed": true
+    },
+    {
+      "check": "Ordinary chat obtains a real saved response",
+      "passed": true
+    },
+    {
+      "check": "UI chat stores sourced personal facts",
+      "passed": true
+    },
+    {
+      "check": "New conversation retains graph memory",
+      "passed": true
+    },
+    {
+      "check": "Reloaded Memory page renders sources and connected graph",
+      "passed": true
+    }
+  ],
+  "status": "passed",
+  "provider_calls": 1,
+  "memory_evidence": [
+    {
+      "cardinality": "one",
+      "id": "fact_481fd0d32a0389d80b8d354beefdea156d9fc187",
+      "kind": "semantic",
+      "recorded_at": "2026-10-18T15:39:11.721599+00:00",
+      "relation": "restaurant-count",
+      "slot": "memory_ec46b07c50659b89fc3a4d391cbea5a6",
+      "source": {
+        "message": "msg_5cdaf78ae6eaf6ec2e1971ad3d50db34c80ef2b9",
+        "passage": "My name is Quinn and I own 2 restaurants.",
+        "provenance": "user_assertion"
+      },
+      "subject": "user",
+      "supersedes": null,
+      "value": "2"
+    },
+    {
+      "cardinality": "one",
+      "id": "fact_9b4246ff676a727becc751a678a45fe4b8355e59",
+      "kind": "semantic",
+      "recorded_at": "2026-10-18T15:39:11.721465+00:00",
+      "relation": "name",
+      "slot": "memory_6bd67564a459680c9ef2bb99fa42139c",
+      "source": {
+        "message": "msg_5cdaf78ae6eaf6ec2e1971ad3d50db34c80ef2b9",
+        "passage": "My name is Quinn and I own 2 restaurants.",
+        "provenance": "user_assertion"
+      },
+      "subject": "user",
+      "supersedes": null,
+      "value": "Quinn"
+    }
+  ],
+  "turn_evidence": [
+    {
+      "agent_role": "Assistant",
+      "citations": [],
+      "handoff": null,
+      "id": "turn_641c5ce29b55dcc1c95742e0f4cdf9d45dc5e85d7f33e75510ae09c5d8b55978",
+      "message": "msg_5cdaf78ae6eaf6ec2e1971ad3d50db34c80ef2b9",
+      "provider": "OPENROUTER (cohere/north-mini-code:free)",
+      "recorded_at": "2026-10-18T15:39:11.721616+00:00",
+      "reply": "Hello Quinn! It's great to meet you. I see you own 2 restaurants. How can I help you with that today?",
+      "retrieved": [],
+      "saved": [
+        "fact_9b4246ff676a727becc751a678a45fe4b8355e59",
+        "fact_481fd0d32a0389d80b8d354beefdea156d9fc187"
+      ],
+      "suggested_task": "",
+      "thread": "main"
+    }
+  ],
+  "test_graph_deleted": true
+}

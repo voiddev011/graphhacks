@@ -1,30 +1,40 @@
-# Test Continuity live
+# Talk to Continuity and check its memory
 
-Open **http://localhost:8501**. Start it again later with:
+No new installation is needed in this workspace.
 
 ```powershell
 .\docker.ps1 compose up -d --wait
 .\ui.ps1
 ```
 
-1. In **Workspace**, choose **Start a new task**.
-2. Type a task you actually want help with. Nothing is filled in for you.
-3. Click **Create plan**. Your text is saved as your task and sent to Gemini.
-4. Click **Get Helper steps** to get live suggestions for that plan.
-5. Refresh the page to see the saved task and draft again.
+Open http://localhost:8501 and refresh if it was already open.
 
-When you have performed and checked the work, report the actual outcome and
-confirm it. The app records your report; it does not execute the task for you.
+1. Enter a NEW project name, such as `memory_test_1`, and click **Open project**.
+2. In **AI Assistant Chat**, send your own facts, for example:
+   `My name is Jack and I own 2 restaurants.`
+3. Expect a normal response and **Saved ... sourced memories**. Expand the
+   memory/source panel. These are facts you supplied, not preloaded examples.
+4. Click **New conversation**, select **Helper** under **Talk to**, and ask:
+   `What is my name and how many restaurants do I own?`
+5. Send: `Correction: I now own 3 restaurants.`
+6. Start another conversation and ask the count again. Expect 3, with a source.
+7. Refresh or restart Streamlit. The conversation selector and saved facts should
+   remain. **Memory** shows the connected graph, current facts and earlier values.
+8. Ask: `Help me plan a weekly budget for my restaurants.` If a task is suggested,
+   click **Create this plan**, then **Get Step-by-Step Helper Guide**. Planner and
+   Helper read the same current memory. Nothing is completed automatically.
 
-Use **Plan saved tasks** to continue ready work already in this project.
-**Memory** shows only decisions, procedures and attempts you have saved.
-Optional dependencies let you connect a new task to saved decisions and earlier work.
+Use your actual name and situation when testing for real. The text above is only
+an example you can type; it is not loaded into your project by the app.
 
-There are no preloaded tasks, example conversations or scripted-answer controls
-in the live app. Test fixtures are kept separately under `tests/`.
+Use the task board to declare technical dependencies, confirm completed work,
+and resolve reviews. Chat can discuss a decision, but the decision form makes
+an actual technical change. Completion always needs your explicit report.
 
-The earlier Apollo sample records were cleared after a private local backup.
-Use the project field to open your own project name; new projects start empty.
+A new conversation keeps project memory. A new PROJECT starts with separate
+memory. Switching back restores the earlier project's records.
 
-If a request times out, retry with unchanged inputs to retain its request ID.
-Existing drafts display without another API call.
+If a provider fails, the router can try a configured standby within the request
+budget. If all attempts fail, the UI reports failure; it never replaces them
+with scripted answers. Retry the same message while budget remains; the sidebar
+can start a new request after exhaustion. Free-provider availability can vary.

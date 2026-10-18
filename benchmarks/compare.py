@@ -13,6 +13,8 @@ def compare(directories, varying="memory"):
         folder = Path(directory)
         m = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
         score = json.loads((folder / "score.json").read_text(encoding="utf-8"))
+        if score.get("evaluation_valid") is False or score.get("judge_errors", 0):
+            raise ValueError("Judge errors make this evaluation incomplete; rerun judging before comparing accuracy.")
         if m["dry_run"] or score["dataset_sha256"] != m["dataset_sha256"] or score["selected_ids"] != m["selected_ids"]:
             raise ValueError("Score provenance does not match this answer run.")
         if score["reader"] != m["model"] or score["method"] != m["method"] or score["cases"] != m["cases"]:

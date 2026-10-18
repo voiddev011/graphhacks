@@ -31,9 +31,28 @@ def projection(state, project_key):
     for kind, collection in [("Message", "messages"), ("DecisionVersion", "versions"),
                               ("Task", "tasks"), ("Result", "results"), ("Review", "reviews"),
                               ("Handoff", "handoffs"), ("Attempt", "attempts"),
-                              ("Procedure", "procedure_versions"), ("Request", "requests")]:
+                              ("Procedure", "procedure_versions"), ("Request", "requests"),
+                              ("MemoryVersion", "memory_versions"), ("ChatTurn", "chat_turns")]:
         for key, value in state.get(collection, {}).items():
             node(kind, key, value)
+    for key, vid in state.get("memory_slots", {}).items():
+        node("MemorySlot", key, {"current": vid})
+        edge("CURRENT", "MemorySlot", key, "MemoryVersion", vid)
+    for vid, fact in state.get("memory_versions", {}).items():
+        for field, rel in [("subject", "SUBJECT"), ("value", "OBJECT")]:
+            name = " ".join(fact[field].casefold().split())
+            key = digest(name)[:32]
+            node("Entity", key, {"name": name})
+            edge(rel, "MemoryVersion", vid, "Entity", key)
+        edge("FROM_MESSAGE", "MemoryVersion", vid, "Message", fact["source"]["message"])
+        edge("SUPERSEDES", "MemoryVersion", vid, "MemoryVersion", fact["supersedes"])
+    for tid, turn in state.get("chat_turns", {}).items():
+        edge("FROM_MESSAGE", "ChatTurn", tid, "Message", turn["message"])
+        for vid in turn["retrieved"]:
+            edge("RECALLED", "ChatTurn", tid, "MemoryVersion", vid)
+        for vid in turn["saved"]:
+            edge("LEARNED", "ChatTurn", tid, "MemoryVersion", vid)
+        edge("HANDOFF", "ChatTurn", tid, "Handoff", turn.get("handoff"))
     for key, did in state["decisions"].items():
         node("DecisionSlot", key, {"key": key, "current": did})
         edge("CURRENT", "DecisionSlot", key, "DecisionVersion", did)
@@ -60,6 +79,8 @@ def projection(state, project_key):
         for did in r["validated_against"].values():
             edge("VALIDATED_AGAINST", "Review", rid, "DecisionVersion", did)
     for hid, h in state["handoffs"].items():
+        for vid in h.get("memory_inputs", {}).values():
+            edge("RECALLED", "Handoff", hid, "MemoryVersion", vid)
         edge("FOR_TASK", "Handoff", hid, "Task", h["bundle"]["task"])
         for did in h["bundle"]["decisions"].values():
             edge("USES_INPUT", "Handoff", hid, "DecisionVersion", did)
@@ -67,14 +88,16 @@ def projection(state, project_key):
             edge("USES_PROCEDURE", "Handoff", hid, "Procedure", proc)
     for aid, a in state["attempts"].items():
         edge("HAS_ATTEMPT", "Task", a["task"], "Attempt", aid)
+        for vid in a.get("memory_inputs", {}).values():
+            edge("RECALLED", "Attempt", aid, "MemoryVersion", vid)
     for pid, proc in state.get("procedure_versions", {}).items():
         edge("FROM_MESSAGE", "Procedure", pid, "Message", proc["source"]["message"])
     # Repeated empty slots from multiple tasks are one graph record.
     return list({n["id"]: n for n in nodes}.values()), edges
 
 
-LABELS = ("Message", "DecisionSlot", "DecisionVersion", "Task", "Result", "Review", "Handoff", "Attempt", "Procedure", "Request")
-RELATIONSHIPS = ("CURRENT", "SUPERSEDES", "FROM_MESSAGE", "DEPENDS_ON", "REQUIRES_DECISION", "REPLACES", "HAS_RESULT", "BASED_ON", "ACCEPTS", "VALIDATED_AGAINST", "FOR_TASK", "USES_INPUT", "USES_PROCEDURE", "HAS_ATTEMPT")
+LABELS = ("Message", "DecisionSlot", "DecisionVersion", "Task", "Result", "Review", "Handoff", "Attempt", "Procedure", "Request", "MemorySlot", "MemoryVersion", "Entity", "ChatTurn")
+RELATIONSHIPS = ("CURRENT", "SUPERSEDES", "FROM_MESSAGE", "DEPENDS_ON", "REQUIRES_DECISION", "REPLACES", "HAS_RESULT", "BASED_ON", "ACCEPTS", "VALIDATED_AGAINST", "FOR_TASK", "USES_INPUT", "USES_PROCEDURE", "HAS_ATTEMPT", "SUBJECT", "OBJECT", "RECALLED", "LEARNED", "HANDOFF")
 
 # Only fixed names from the lists above enter query text. All user data is params.
 COMMIT = """
@@ -122,6 +145,22 @@ class FalkorStore:
 
     def read(self):
         return self.read_versioned()[1]
+
+    def conversation_context(self, text):
+        # Current facts are reached via graph edges, with neighbors sharing an
+        # entity. The graph and canonical state are read in one database query.
+        rows = self.graph.ro_query("""
+          MATCH (p:Project {id:$project})
+          OPTIONAL MATCH (p)-[:CONTAINS]->(:MemorySlot)-[:CURRENT]->(m:MemoryVersion)
+          OPTIONAL MATCH (m)-[:SUBJECT|OBJECT]->(entity:Entity)<-[:SUBJECT|OBJECT]-(neighbor:MemoryVersion)<-[:CURRENT]-(:MemorySlot)
+          WHERE neighbor.project=$project
+          RETURN p.snapshot,collect(DISTINCT m.data),collect(DISTINCT neighbor.data)
+        """, {"project": self.project}).result_set
+        if len(rows) != 1:
+            raise Rejected("Shared memory was not found in this project.")
+        snapshot, direct, neighbors = rows[0]
+        facts = {json.loads(raw)["id"]: json.loads(raw) for raw in direct + neighbors if raw}
+        return json.loads(snapshot), select_memories(list(facts.values()), text)
 
     def task_context(self, task_id):
         # Actual graph traversal supplies the Helper's connected evidence.
@@ -175,9 +214,35 @@ class MemoryStore:
             self.state, receipt, _ = transition(self.state, kind, payload, operation_id)
             return receipt
 
+    def conversation_context(self, text):
+        state = self.read()
+        return state, select_memories([state["memory_versions"][v] for v in state.get("memory_slots", {}).values()], text)
+
     def task_context(self, task_id):
         from .domain import required
         s = self.read()
         t = required(s["tasks"], task_id)
         return s, {"task": t, "decisions": {k: s["versions"][s["decisions"][k]] for k in t["requires"]},
                    "prerequisites": [s["tasks"][k] for k in t["prerequisites"]]}
+
+
+def select_memories(facts, text, max_chars=10500):
+    """Bounded lexical seeds + connected entity facts, with profile/routine fallback.
+
+Small-project prototype, not vector search or a high-throughput memory service.
+Never splits a source-bearing memory to make it fit.
+"""
+    import re
+    words = set(re.findall(r"\w+", text.casefold())) - {"what", "which", "the", "and", "you", "about", "with", "have", "does", "that"}
+    score = lambda f: len(words & set(re.findall(r"\w+", f["subject"] + " " + f["relation"].replace("_", " ") + " " + f["value"].casefold())))
+    seeds = [f for f in facts if score(f) > 0]
+    entities = {x.casefold() for f in seeds for x in [f["subject"], f["value"]]}
+    ordered = sorted(facts, key=lambda f: (score(f) > 0, f["subject"].casefold() in entities or f["value"].casefold() in entities,
+        f["subject"] == "user" or f["kind"] == "procedural", f["recorded_at"]), reverse=True)
+    chosen, size = [], 0
+    for fact in ordered:
+        cost = len(canonical(fact))
+        if size + cost <= max_chars and len(chosen) < 24:
+            chosen.append(fact)
+            size += cost
+    return chosen

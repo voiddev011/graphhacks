@@ -128,6 +128,77 @@ def transition(state, kind, payload, operation_id):
 
 
 def apply(s, kind, p, oid):
+    if kind == "chat_turn":
+        from .conversation import ChatResponse, slot_key
+        response = ChatResponse.model_validate(p["response"])
+        m = required(s["messages"], p["message"])
+        request = required(s["requests"], p["request"])
+        if m["speaker"] != "user" or request["input"]["text"] != m["text"]:
+            raise Rejected("Conversation memories require the current user's message.")
+        identifier(p["thread"])
+        known = {s.get("memory_slots", {}).get(key) for key in s.get("memory_slots", {})}
+        if not set(p["retrieved"]) <= known or not set(response.citations) <= set(p["retrieved"]):
+            raise Rejected("Conversation evidence is no longer current.")
+        slots = s.setdefault("memory_slots", {})
+        versions = s.setdefault("memory_versions", {})
+        saved, seen = [], set()
+        for fact in response.memories:
+            src = source(s, p["message"], fact.passage)
+            # Validate the containing sentence, not a conveniently selected fragment
+            # of a question or hypothetical. This is conservative by design.
+            start = m["text"].find(fact.passage)
+            left = max((m["text"].rfind(c, 0, start) for c in ".!?;\n"), default=-1) + 1
+            ends = [m["text"].find(c, start + len(fact.passage)) for c in ".!?;\n"]
+            end = min((x for x in ends if x >= 0), default=len(m["text"]) - 1) + 1
+            sentence = m["text"][left:end]
+            if re.search(r"\?|\b(maybe|perhaps|might|could|what if|suppose|imagine)\b", sentence, re.I):
+                raise Rejected("A question or hypothetical cannot become an asserted memory.")
+            if fact.value.casefold() not in fact.passage.casefold():
+                raise Rejected("Memory value must occur in its exact user source.")
+            if fact.kind != "procedural" and re.search(r"\b(not|never|don't|do not|no longer)\b", sentence, re.I):
+                raise Rejected("Negated statements need a clear positive correction before storing a fact.")
+            subject = " ".join(fact.subject.casefold().split())
+            relation = "_".join(fact.relation.casefold().split())
+            if fact.memory_key:
+                old_id = required(slots, fact.memory_key)
+                old_fact = versions[old_id]
+                if old_id not in p["retrieved"] or old_fact["kind"] != fact.kind:
+                    raise Rejected("A correction must reference a retrieved memory of the same type.")
+                key = fact.memory_key
+                subject, relation = old_fact["subject"], old_fact["relation"]
+            else:
+                key = slot_key(subject, relation, fact.kind, p["message"], fact.cardinality, fact.value)
+            if key in seen:
+                raise Rejected("Only one new value per memory slot may be saved in a turn.")
+            seen.add(key)
+            previous = slots.get(key)
+            if previous != p["expected"].get(key):
+                raise Rejected("This memory changed while answering. Send the correction again with a new request.")
+            if previous and versions[previous]["value"].casefold() == fact.value.casefold():
+                continue
+            vid = "fact_" + digest([oid, key])[:40]
+            versions[vid] = {"id": vid, "slot": key, "subject": subject, "relation": relation,
+                "value": fact.value, "kind": fact.kind, "source": src, "supersedes": previous,
+                "cardinality": fact.cardinality,
+                "recorded_at": now()}
+            slots[key] = vid
+            saved.append(vid)
+        turn_id = "turn_" + oid
+        s.setdefault("chat_turns", {})[turn_id] = {"id": turn_id, "thread": p["thread"],
+            "agent_role": p["agent_role"], "message": p["message"], "reply": response.reply,
+            "citations": response.citations, "retrieved": p["retrieved"], "saved": saved,
+            "suggested_task": response.suggested_task, "provider": p["provider"],
+            "recorded_at": now(), "handoff": None}
+        return {"turn": turn_id, "saved": saved}, True
+
+    if kind == "chat_link":
+        turn = required(s.get("chat_turns", {}), p["turn"])
+        required(s["handoffs"], p["handoff"])
+        if turn["handoff"] and turn["handoff"] != p["handoff"]:
+            raise Conflict("This conversation already has a saved plan.")
+        turn["handoff"] = p["handoff"]
+        return {"handoff": p["handoff"]}, True
+
     if kind == "message":
         mid = identifier(p["id"])
         if p["speaker"] not in {"user", "assistant"} or not p["text"].strip():
@@ -199,11 +270,14 @@ def apply(s, kind, p, oid):
 
     if kind == "handoff":
         b = p["bundle"]
+        if any(s.get("memory_slots", {}).get(k) != v for k,v in p.get("memory_inputs", {}).items()):
+            raise Rejected("Shared memories changed during planning. Start a new request.")
         if b["task"] not in ready(s) or not valid_bundle(s, b):
             raise Rejected("Planning inputs changed or task is not eligible. Replan.")
         hid = "handoff_" + oid
         s["handoffs"][hid] = {"id": hid, "objective": p["objective"], "bundle": b,
-                                 "status": "saved", "draft": None, "claim": None}
+                                 "status": "saved", "draft": None, "claim": None,
+                                 "memory_inputs": p.get("memory_inputs", {})}
         return {"handoff": hid}, True
 
     if kind == "claim":
@@ -223,6 +297,7 @@ def apply(s, kind, p, oid):
         # Caller must submit the exact claim and execution version it received.
         owns = t["claim"] is not None and t["claim"] == p["claim"] and h["claim"] == p["claim"]
         good = owns and h.get("execution_version") == p["execution_version"] and t["status"] == "in_progress" and valid_bundle(s, h["bundle"], p["execution_version"])
+        good = good and all(s.get("memory_slots", {}).get(k) == v for k,v in p.get("memory_inputs", {}).items())
         if kind == "complete":
             evidence = source(s, p["message"], p["passage"])
             if not p["passage"].strip() or not p["outcome"].strip():
@@ -234,7 +309,8 @@ def apply(s, kind, p, oid):
         aid = "attempt_" + oid
         s["attempts"][aid] = {"id": aid, "task": t["id"], "handoff": h["id"],
                                  "content": p.get("draft", p.get("outcome", "")), "source": evidence,
-                                 "stale": not good, "bundle": copy.deepcopy(h["bundle"])}
+                                 "stale": not good, "bundle": copy.deepcopy(h["bundle"]),
+                                 "memory_inputs": p.get("memory_inputs", {})}
         if not good:
             # Do not clear a newer owner's claim.
             if owns:

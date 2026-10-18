@@ -3,7 +3,7 @@
 Checked: 18 October 2026, IST. This file summarizes the public overview, rules,
 schedule, and resources pages. Project choices are in [PROJECT_PLAN.md](PROJECT_PLAN.md).
 
-**Status:** implementation has started. See [actual implementation and executed
+**Status:** natural chat, persistent sourced memory and shared Planner/Helper handoffs are implemented; final evidence is in IMPLEMENTATION_STATUS.md. See [actual implementation and executed
 checks](IMPLEMENTATION_STATUS.md). Event facts below are separate from application
 verification; no checkpoint or external benchmark result is claimed.
 

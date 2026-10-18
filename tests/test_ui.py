@@ -127,3 +127,65 @@ def test_ui_helper_retry_resumes_original_claim_and_request(service, monkeypatch
     assert state["requests"][helper_id]["calls"] == 2
     assert len(state["requests"]) == 2
     assert len(state["attempts"]) == 1
+
+
+def test_chat_keeps_saved_handoff_and_requires_completion_confirmation(service, monkeypatch):
+    from tests.fakes import DemoModel
+    class ChatModel(DemoModel):
+        def generate(self, role, context):
+            if role == "chat":
+                return {"reply":"I can help you review the code.","memories":[],"citations":[],"suggested_task":"Review my own code"}
+            return super().generate(role, context)
+    app = loaded(service, monkeypatch, model=ChatModel)
+    app.chat_input[0].set_value("Plan a task to review my own code").run()
+    assert not app.exception
+    assert len(service.store.read()["chat_turns"]) == 1
+    assert not service.store.read()["tasks"]
+    button(app, "Create this plan").click().run()
+    assert not app.exception
+    assert next(iter(service.store.read()["chat_turns"].values()))["handoff"]
+    button(app, "Get Step-by-Step Helper Guide").click().run()
+    assert not app.exception
+    assert len(service.store.read()["attempts"]) == 1
+    assert not app.checkbox(key="completion_confirm").value
+    # Browser/session reload loads persisted turns, not a fake greeting/session log.
+    app = loaded(service, monkeypatch, model=ChatModel)
+    assert any("I can help you review the code." in m.value for m in app.markdown)
+
+
+def test_benchmark_button_does_not_pass_workspace_to_contracts(service, monkeypatch):
+    from benchmarks import contracts
+    seen = []
+    def isolated(*args):
+        seen.append(args)
+        return {"pass_rate": 1, "passed": 14, "planned_checks": 14, "elapsed_seconds": 0}
+    monkeypatch.setattr(contracts, "run_checks", isolated)
+    app = loaded(service, monkeypatch)
+    before = service.store.read()
+    app.radio(key="page").set_value("Benchmark").run()
+    button(app, "Run 14 Contract Checks Now").click().run()
+    assert not app.exception and seen == [()]
+    assert service.store.read() == before
+
+
+def test_new_conversation_retains_facts_and_selects_new_thread(service, monkeypatch):
+    from tests.fakes import DemoModel
+    class Remembering(DemoModel):
+        def generate(self,role,context):
+            if role=="chat":
+                text=context["current_message"]
+                proposals=[{"subject":"user","relation":"name","value":"Quinn","kind":"semantic","passage":text}] if text=="My name is Quinn." else []
+                return {"reply":"Hello Quinn.","memories":proposals,"citations":[m["id"] for m in context["graph_memory"]],"suggested_task":""}
+            return super().generate(role,context)
+    app=loaded(service,monkeypatch,model=Remembering)
+    app.chat_input[0].set_value("My name is Quinn.").run()
+    assert not app.exception
+    before=service.store.read()
+    button(app,"New conversation").click().run()
+    assert not app.exception
+    assert app.selectbox(key="chat_thread").value.startswith("session_")
+    assert service.store.read()==before
+    app.chat_input[0].set_value("What is my name?").run()
+    assert not app.exception
+    state=service.store.read()
+    assert len(state["chat_turns"])==2 and len(state["memory_slots"])==1

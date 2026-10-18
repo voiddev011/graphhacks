@@ -10,3 +10,5 @@ benchmark-data/
 benchmark-runs/
 .streamlit/secrets.toml
 .local-backups/
+
+.pytest_tmp/

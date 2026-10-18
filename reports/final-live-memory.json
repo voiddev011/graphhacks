@@ -1,0 +1,36 @@
+{
+  "kind": "live synthetic end-to-end memory smoke test",
+  "public_benchmark": false,
+  "requested_model": "nvidia/nemotron-3.5-lightning:free",
+  "checks": [
+    {
+      "check": "Natural message stores Jack and restaurant count with exact user sources",
+      "passed": true
+    },
+    {
+      "check": "Fresh Python process recalls stored facts",
+      "passed": true
+    },
+    {
+      "check": "Helper recalls another conversation's facts with graph citations",
+      "passed": true
+    },
+    {
+      "check": "Correction supersedes 2 with 3 and preserves history",
+      "passed": false
+    }
+  ],
+  "provider_calls": 3,
+  "status": "failed",
+  "error_type": "AssertionError",
+  "failed_check": "Correction supersedes 2 with 3 and preserves history",
+  "served_by": {
+    "last_served_by": "OPENROUTER (nvidia/nemotron-3.5-lightning:free)",
+    "last_provider": "openrouter",
+    "last_model": "nvidia/nemotron-3.5-lightning:free",
+    "fallbacks_triggered": 0,
+    "fallback_history": []
+  },
+  "elapsed_seconds": 142.897,
+  "test_graph_deleted": true
+}

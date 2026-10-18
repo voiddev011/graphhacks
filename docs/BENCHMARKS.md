@@ -1,5 +1,7 @@
 # Testing and comparing Continuity
 
+Start with [the step-by-step testing guide](TESTING_GUIDE.md). The historical 3/3 synthetic scores are unverified because the previous judge ignored model verdicts. Fresh runs use a corrected local judge; they are not official evaluator results.
+
 Three different results must stay separate:
 
 | Result | What it establishes |
@@ -54,8 +56,7 @@ fixtures exist only under `tests/data/` and are not public benchmark results.
 
 Use the cleaned S release linked from the
 [official repository](https://github.com/xiaowu0162/LongMemEval). Review the
-dataset's terms and hackathon data rules before using it; this project does not
-download or redistribute that corpus. Put your permitted JSON file under
+dataset's terms and hackathon data rules before using it; the corpus is stored locally under the ignored `benchmark-data/` directory. Put your permitted JSON file under
 `benchmark-data/` (ignored by Git).
 
 First inspect retrieval without any model calls:

@@ -27,7 +27,11 @@ def summarize(run_dir, judge_log):
     if len(models) != 1:
         raise ValueError("Mixed judge models are not a comparable evaluation.")
     result = {"dataset_sha256": manifest["dataset_sha256"], "selected_ids": manifest["selected_ids"],
-              "scoring": "Official-style judge labels; execution errors are forced incorrect. Verify scorer provenance separately.",
+              "scoring": ("Local LLM judge; not the official evaluation protocol. Errors count incorrect."
+                          if any(r.get("judge_protocol") == "continuity-local-llm-v1" for r in rows)
+                          else "Official-style judge labels; execution errors are forced incorrect. Verify scorer provenance separately."),
+              "judge_errors": sum(bool(r.get("judge_error")) for r in rows),
+              "evaluation_valid": not any(r.get("judge_error") for r in rows),
               "method": manifest["method"], "reader": manifest["model"], "judge": next(iter(models)),
               "cases": len(rows), "correct": correct, "accuracy": correct / len(rows),
               "errors_counted_incorrect": len(errors), "is_subset": manifest["is_subset"],

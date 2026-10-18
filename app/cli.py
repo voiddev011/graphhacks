@@ -13,12 +13,17 @@ from .service import Service, new_id, operation
 
 
 def parser():
-    p = argparse.ArgumentParser(description="Continuity: synthetic project memory and safe resumption")
-    p.add_argument("--tenant", default="userA", help="Local synthetic selector, not authentication")
+    p = argparse.ArgumentParser(description="Continuity: conversations, shared memory and safe project resumption")
+    p.add_argument("--tenant", default="userA", help="Local profile selector, not authentication")
     p.add_argument("--project", default="apollo")
     sub = p.add_subparsers(dest="action", required=True)
-    for name in ("status", "history", "requests", "doctor"):
+    for name in ("status", "history", "requests", "doctor", "memories"):
         sub.add_parser(name)
+    chat_parser = sub.add_parser("chat")
+    chat_parser.add_argument("text")
+    chat_parser.add_argument("--thread", default="main")
+    chat_parser.add_argument("--agent", choices=["Assistant", "Planner", "Helper"], default="Assistant")
+    chat_parser.add_argument("--request-id")
     d = sub.add_parser("decide")
     d.add_argument("key")
     d.add_argument("value")
@@ -75,7 +80,10 @@ def run(args):
         return {"project": args.project, "revision": state["revision"], "eligible": ready(state),
                 "tasks": state["tasks"], "handoffs": state["handoffs"], "results": state["results"], "attempts": state["attempts"]}
     if args.action == "history":
-        return {"current": state["decisions"], "versions": state["versions"], "reviews": state["reviews"]}
+        return {"current": state["decisions"], "versions": state["versions"], "reviews": state["reviews"],
+                "conversations": state.get("chat_turns", {})}
+    if args.action == "memories":
+        return [state["memory_versions"][v] for v in state.get("memory_slots", {}).values()]
     if args.action == "requests":
         return state["requests"]
     if args.action == "replay":
@@ -83,6 +91,10 @@ def run(args):
     rid = getattr(args, "request_id", None) or new_id()
     # Print before any dispatch: retain this ID to retry after a lost response.
     print("Request ID: " + rid, file=sys.stderr)
+    if args.action == "chat":
+        from .conversation import chat
+        receipt = chat(s, rid, args.text, thread=args.thread, agent_role=args.agent)
+        return s.store.read()["chat_turns"][receipt["turn"]]
     if args.action in {"task", "procedure", "review", "release"}:
         ui_input = {k: v for k, v in vars(args).items() if k != "request_id"}
         s.begin(rid, args.action, canonical(ui_input))

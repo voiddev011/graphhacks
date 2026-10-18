@@ -1,3 +1,5 @@
+> Updated app: start with [the short chat and memory test](QUICKSTART.md). Natural chat and persistent conversation history are now implemented; older learning notes below describe earlier stages.
+
 # Continuity: a beginner's guide to the code and a hands-on lab
 
 This guide describes the code in this folder, inspected on 18 October 2026.

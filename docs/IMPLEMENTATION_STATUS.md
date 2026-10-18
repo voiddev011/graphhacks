@@ -1,158 +1,70 @@
-# What exists and what has been checked
+# Final implementation status - 18 October 2026
 
-Implementation session: 18 October 2026. This records actual code and executed
-checks, separately from the larger specification.
+Continuity now supports natural conversation rather than keyword routing.
+The participant's existing .env and project data were retained. No commit,
+push, public deployment or hackathon submission was performed.
 
 ## Implemented
 
-- Terminal app with synthetic tenant/project selectors, seed data, history,
-  typed decisions, tasks, approved procedures, Planner/Helper, review and release.
-- Explicit LangGraph workflow with bounded LangChain/Gemini structured responses.
-- Decision versions with exact user sources; earlier versions remain in history.
-- Declared prerequisites and technical inputs; affected completed results require
-  review when a decision changes. Confirm, reopen and replacement resolutions exist.
-- Durable request/handoff/claim schema; final input/version checks; stale drafts
-  and outcomes retained without accepting stale completion.
-- Scoped operation hashes, immutable accepted envelopes and original-receipt replay.
-- Persisted three-attempt request budget, including failed provider calls; each
-  dispatch reserves its own slot. Reads/rule checks require zero model calls.
-- FalkorDB repository, graph evidence traversal and conditional single-query commit.
-- Docker Compose with localhost bindings, named volume and AOF configuration.
-- Streamlit browser interface: task dashboard, Planner/Helper, readable drafts,
-  reported completion, decision history, procedure approval, claim release and review.
-- Fourteen isolated synthetic contract checks, available through the UI and CLI.
-- Experimental original-LongMemEval-format conversation adapter with graph, BM25,
-  full-history and no-memory modes, call budgets, traces and judge-log aggregation.
+- Ordinary model-backed chat with durable successful user/assistant turns.
+- Conversation selector and New conversation; project memory survives new threads.
+- Semantic facts, episodic events and reusable user routines, all source-backed.
+- Versioned single-valued corrections with explicit memory-slot references;
+  named many-valued relationships coexist rather than overwrite each other.
+- Current memory/entity/source graph traversals supply context. Recent history
+  is sorted chronologically, not by snapshot dictionary keys.
+- Memory page shows a connected graph, current facts, sources and earlier values.
+- Assistant, Planner and Helper share memory. Task handoffs and drafts retain
+  the exact fact-version IDs they read; Helper reads current facts after a handoff.
+- Source/schema/scope validation, replay receipts, atomic optimistic commits,
+  conflicting-correction rejection, and a persisted three-attempt budget.
+- Existing technical-decision, prerequisite, claim, stale-draft and review rules.
+- Gemini/OpenRouter fallback. A selected OpenRouter model tries free standbys
+  before Google. Actual served model is retained with each chat turn.
+- CLI chat/memories commands; browser UI remains the easiest manual test.
 
-## Executed locally
+## Evidence
 
-Python **3.13.9**, in project-local `.tools/python`; packages are frozen in
-`requirements.lock`. This does not install Python system-wide.
+Full final regression run: **111 passed, 2 skipped**, zero failures/errors:
+`reports/final-tests.xml`. The two skips are the RAM parameter of a graph-only
+retrieval test and the separately gated live-Gemini test. Live models were tested
+separately below. A focused final UI/routing rerun passed **20/20** and covers later polish and
+new-conversation retention. Across the latest results per test there are **114 passed, 2 skipped, 0 failed**; see `reports/final-ui-routing.xml` and the combined
+latest-result summary in `reports/final-verification.json`.
 
-```powershell
-$env:PYTHONNOUSERSITE = '1'
-$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = '1'
-.\.tools\python\python.exe -m pytest -q --junitxml=reports/unit-results.xml
-.\.tools\python\python.exe -m app.demo
-.\.tools\python\python.exe -m compileall -q app tests
-.\.tools\python\python.exe -m pip check
-```
+**14/14 coordination contracts** passed on actual FalkorDB, zero model calls:
+`reports/scenario-results.json`. Tests use temporary graphs, not the open project.
 
-Original offline run: **25 passed, 25 skipped, 0 failed**.
-Database-enabled run: **49 passed, 1 skipped, 0 failed**. That run skipped the live Gemini case. A later explicit live run failed with
-`504 DEADLINE_EXCEEDED`; Google model lookup recognized the configured key/model.
-Checks now run against both the **RAM adapter and real FalkorDB**, using scripted models.
-They cover correction history, three review resolutions, prerequisites, unrelated
-changes, controlled changes during generation, stale claim ownership, idempotent
-replay/hash conflict, failed-write replay, malformed output and call budgeting.
-The SDK retry configuration is checked against the actual installed package.
-See `reports/unit-results.xml`, `reports/database-results.xml`,
-`reports/persistence-results.json` and `reports/manifest.json` for evidence.
-Compilation completed successfully; `pip check` reported **No broken requirements found**.
-The offline walkthrough and command-line help both ran successfully.
+**8/8 live end-to-end checks passed**, using real OpenRouter models and ten total
+provider attempts including fallback failures: `reports/final-live-memory-v2.json`.
+They cover natural-message extraction, fresh Python-process recall, new Helper
+conversation recall, 2-to-3 correction/history, new Planner recall, saved evidence,
+Planner-to-Helper handoff and project isolation. Earlier failed runs were preserved.
 
-## Integration status
+**5/5 real Streamlit AppTest checks passed**, one actual free-provider call:
+`reports/final-live-ui-v3.json`. The returned model was
+`cohere/north-mini-code:free` via `openrouter/free`. It saved the ordinary personal
+message, retained memory after New conversation, and rendered sources and graph
+after UI reload. This is UI execution evidence, not a browser screenshot review.
 
-| Gate | Actual status |
-|---|---|
-| FalkorDB query execution and guarded commits | Contract suite passed on the real server, including races/replay; not a general concurrency proof |
-| User/project isolation and graph traversal on server | Scoped integration test passed; local selectors remain unauthenticated |
-| Fresh-process graph retrieval | Integration test passed |
-| Graceful database restart | Exact logical state hash retained; fresh-process Helper resumed saved handoff |
-| Container replacement with retained volume | Exact logical state hash retained after `--force-recreate` |
-| AOF/volume configuration | Observed `/data`, `appendonly=yes`, `appendfsync=everysec`; `/data` is mounted |
-| Docker image and digest | Published v4.22.1 pulled and healthy; registry digest pinned in Compose |
-| Live Gemini output, grounding, quota and latency | Key/model lookup passed; two generation smoke attempts returned 504 deadline errors. Live generation is not verified. |
-| FalkorDBSaver workflow checkpoints | Deferred; fresh-session business handoffs are the intended fallback |
-| External memory benchmarks and load tests | Deferred; no score or production performance claim |
-| Public deployment, demo video, hackathon submission | Not performed |
+`pip check`: no broken requirements. The app was restarted after changes. See the
+final verification JSON for current HTTP health and focused-check counts.
 
-Docker Desktop is installed and the project database is running. A service on host
-port 6379 rejected `GRAPH.QUERY`, so Compose and `.env` use **6380**.
-The user has configured `.env`; keep its key private and do not publish it.
-The graph browser responded with HTTP 200 at `http://localhost:3000`.
-`docker.ps1` locates Docker Desktop even when the terminal PATH has not refreshed.
+## Honest limits
 
-## Prototype design choices
+- Local profile selector, not authentication; keep localhost bindings.
+- Small-project whole-snapshot/projection commits; no high-load throughput claim.
+- Bounded lexical/entity retrieval and model extraction can miss or misinterpret
+  facts. Conservative source checks may reject ambiguous wording.
+- User assertions and outcome reports are not independently verified.
+- General conversation facts are advisory; explicit technical dependencies retain
+  their separate completion/review rules.
+- No code-execution tool, background autonomous worker, graph checkpoint saver,
+  public deployment or official leaderboard result is claimed.
+- Free-provider latency, rate limits and malformed responses occurred. Failures
+  consume budget; the app never substitutes scripted answers. The corrected
+  local QA judge uses valid OpenRouter roles and consumes real verdicts; old
+  heuristic/three-fixture scores remain unverified historical results.
 
-For the tiny fixtures, each project has a canonical JSON snapshot and connected
-typed graph records. One optimistic compare-and-swap query commits that snapshot,
-its graph projection and operation receipt. The service retries conflicting writes
-against fresh state; only relevant business inputs invalidate work. Helper retrieves
-connected decision and prerequisite evidence through actual graph paths.
-
-This differs from a fully normalized graph-only implementation: the projection
-is rebuilt per transition, so stable business IDs matter and internal node IDs do
-not survive. The real-server contract suite verifies the current small scenarios;
-this design is for the small demo, not growing production data.
-
-Memory writes are explicit typed commands. General natural-language extraction,
-observed execution tools and authentication are not implemented. The conversational
-benchmark adapter is a separate experimental raw-history retrieval extension, not
-general fact extraction in the task service. Outcomes
-are labeled **user-reported**, and AI drafts never establish task completion.
-
-## Next manual setup
-
-Docker and synthetic demo data are ready. To check or start the local database:
-
-```powershell
-.\docker.ps1 compose up -d --wait
-.\run.ps1 doctor
-.\run.ps1 seed
-$env:CONTINUITY_DB_TESTS = '1'
-.\.tools\python\python.exe -m pytest -q
-```
-
-Then follow the persistence and live-model gates in [README.md](README.md).
-Stop on any server test failure and fix it before claiming the app is ready to submit.
-
-## Earlier live-test issue
-
-The key and `gemini-3.8-flash` were recognized by a short Google model lookup.
-Generation returned `504 DEADLINE_EXCEEDED` at both 45-second and 90-second
-request limits. The adapter now requests low thinking for Gemini 3 models and
-allows 90 seconds, with no hidden retries. The CLI explains deadline errors
-without printing the key. See `reports/live-results.xml`; this is a failed
-live test, not a passing end-to-end result.
-
-## Streamlit and evaluation update
-
-- The user subsequently demonstrated successful live Planner and Helper commands
-  and a successful graceful database restart in their pasted terminal output.
-- Streamlit 1.66.0 is installed in the isolated runtime; `ui.ps1` serves localhost:8501.
-  Root and health routes responded with HTTP 200. AppTest exercised the actual widgets
-  with scripted models and both RAM/FalkorDB backends; no browser screenshot was taken.
-- Expanded full suite: **64 passed, 2 skipped**. The skips are the opt-in older live
-  model test and a graph-only test on the RAM fixture. See `reports/ui-database-results.xml`.
-- A later focused UI/adapter suite checks the final retrieval indexes, ordering and UI
-  notice changes; see `reports/ui-adapter-final.xml` for the executed result.
-- The 14 deterministic project checks passed on FalkorDB, with zero model calls.
-- Three bundled synthetic cases completed a graph-retrieval dry run with zero calls.
-- One bundled synthetic correction question completed a live Gemini answer with
-  citations. The answer matched the fixture on manual inspection; no official judge
-  or numeric public-benchmark score was produced.
-- The complete external dataset, cross-model quality comparison and V2 leaderboard
-  integration/submission remain unperformed. See `BENCHMARKS.md` for reproducible steps.
-
-The first expanded pytest run hit Windows temporary-directory permissions.
-Pytest now uses `.tools/pytest-temp` inside the workspace; the corrected full run passed.
-
-## Live-only correction
-
-The user requested removal of fake/static content from the live app. The live
-UI and CLI now use Gemini only: no sample-loading buttons, scripted switch,
-seed command or demo flag. Projects start empty. A user-entered task creates a
-real task record and a focused live Planner request before Helper continuation.
-
-Only known seeded Apollo data was cleared, after a private `.local-backups/`
-export and a conditional storage-version check. No custom tasks were present.
-`apollo` and the new default `my_project` were checked for zero tasks, messages
-and handoffs. Automated test fixtures/model doubles remain under `tests/` only;
-fixed checks moved to the developer command `benchmarks.contracts`. The app's
-benchmark page no longer loads canned conversations.
-
-The corrected full suite passed **65 tests, with 2 intentional skips**. Evidence:
-`reports/live-only-results.xml`. The live smoke result is recorded separately in
-`reports/live-only-smoke.json` when completed. Earlier sample-based walkthroughs
-and results above are historical; the current walkthrough is QUICKSTART.md.
+Follow [QUICKSTART.md](QUICKSTART.md) to test manually and
+[DEMO_SCRIPT.md](DEMO_SCRIPT.md) to record your hackathon demo.

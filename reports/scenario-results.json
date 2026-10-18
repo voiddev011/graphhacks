@@ -4,12 +4,12 @@
   "external_benchmark": false,
   "model_calls": 0,
   "backend": "FalkorDB",
-  "recorded_at": "2026-10-18T12:06:47.606810+00:00",
+  "recorded_at": "2026-10-18T15:36:10.339932+00:00",
   "planned_checks": 14,
   "passed": 14,
   "executed": 14,
   "pass_rate": 1.0,
-  "elapsed_seconds": 0.536,
+  "elapsed_seconds": 0.698,
   "checks": [
     {
       "check": "Current decision has an exact source",

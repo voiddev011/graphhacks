@@ -61,6 +61,7 @@ def build(service, model):
                 context["tasks"] = [t for t in context["tasks"] if t["id"] == focus]
                 bundles = {focus: bundles[focus]}
             context["user_request"] = st["text"]
+            context["shared_memory"] = service.shared_memory(st["text"])
             proposal = Plan.model_validate(service.generate(st["request_id"], model, "planner", context))
             if proposal.task_id not in bundles:
                 raise Rejected("Planner selected an unknown or ineligible task.")
@@ -69,11 +70,13 @@ def build(service, model):
         else:
             context = service.helper_context(st["handoff"], st["claim"])
             context["user_request"] = st["text"]
+            context["shared_memory"] = service.shared_memory(st["text"] + " " + context["task"]["title"])
             proposal = Help.model_validate(service.generate(st["request_id"], model, "helper", context))
             payload = {"handoff": st["handoff"], "claim": st["claim"]["claim"],
                        "execution_version": st["claim"]["execution_version"],
                        "draft": proposal.model_dump_json()}
             kind = "draft"
+        payload["memory_inputs"] = {m["slot"]: m["id"] for m in context["shared_memory"]}
         return {"envelope": service.accept_envelope(st["request_id"], kind, payload)}
 
     def commit(st):
