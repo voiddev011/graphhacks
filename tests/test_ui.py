@@ -11,6 +11,25 @@ def button(app, label):
     return next(b for b in app.button if b.label == label)
 
 
+def test_chat_saves_valid_memory_and_displays_skipped_proposal(service,monkeypatch):
+    from tests.fakes import DemoModel
+    text="i own a chinese and mexican estaurant"
+    class MixedModel(DemoModel):
+        def generate(self,role,context):
+            if role=="chat":
+                return {"reply":"Thanks for sharing.","memories":[
+                    {"subject":"user","relation":"restaurant_cuisine","value":"chinese","kind":"semantic","passage":text,"cardinality":"many"},
+                    {"subject":"user","relation":"restaurant_count","value":"2","kind":"semantic","passage":text}],
+                    "citations":[],"suggested_task":""}
+            return super().generate(role,context)
+    app=loaded(service,monkeypatch,model=MixedModel)
+    app.chat_input[0].set_value(text).run()
+    assert not app.exception
+    assert any("Skipped 1 proposed memories" in w.value for w in app.warning)
+    assert len(service.store.read()["memory_slots"])==1
+    assert any("Thanks for sharing." in m.value for m in app.markdown)
+
+
 def loaded(service, monkeypatch, model=None):
     from tests.fakes import DemoModel
     monkeypatch.setattr(actions, "connect", lambda *_: service)

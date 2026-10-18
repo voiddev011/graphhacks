@@ -16,6 +16,10 @@ class Conflict(Rejected):
     pass
 
 
+class MemoryGroundingRejected(Rejected):
+    """One proposed fact lacks valid source grounding; other facts may be valid."""
+
+
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
 
@@ -129,11 +133,12 @@ def transition(state, kind, payload, operation_id):
 
 def apply(s, kind, p, oid):
     if kind == "chat_turn":
-        from .conversation import ChatResponse, slot_key
-        response = ChatResponse.model_validate(p["response"])
+        from .conversation import ChatResponse, TranscriptResponse, slot_key
         m = required(s["messages"], p["message"])
+        imported = m["speaker"] == "transcript"
+        response = (TranscriptResponse if imported else ChatResponse).model_validate(p["response"])
         request = required(s["requests"], p["request"])
-        if m["speaker"] != "user" or request["input"]["text"] != m["text"]:
+        if m["speaker"] not in {"user", "transcript"} or request["input"]["text"] != m["text"]:
             raise Rejected("Conversation memories require the current user's message.")
         identifier(p["thread"])
         known = {s.get("memory_slots", {}).get(key) for key in s.get("memory_slots", {})}
@@ -143,20 +148,31 @@ def apply(s, kind, p, oid):
         versions = s.setdefault("memory_versions", {})
         saved, seen = [], set()
         for fact in response.memories:
-            src = source(s, p["message"], fact.passage)
+            try:
+                src = source(s, p["message"], fact.passage, user=not imported)
+            except Rejected as exc:
+                raise MemoryGroundingRejected(str(exc)) from exc
+            if imported:
+                turn = next((t for t in m.get("metadata", {}).get("turns", []) if t["dia_id"] == fact.dialogue_id), None)
+                if not turn or fact.passage not in turn["text"]:
+                    raise Rejected("Imported memory must cite an exact original dialogue turn.")
+                if fact.subject.casefold() == "user":
+                    raise Rejected("Imported speakers cannot be merged into the local user's identity.")
+                src.update(dialogue_id=fact.dialogue_id, speaker=turn["speaker"],
+                           session_date=m["metadata"]["session_date"])
             # Validate the containing sentence, not a conveniently selected fragment
             # of a question or hypothetical. This is conservative by design.
             start = m["text"].find(fact.passage)
             left = max((m["text"].rfind(c, 0, start) for c in ".!?;\n"), default=-1) + 1
-            ends = [m["text"].find(c, start + len(fact.passage)) for c in ".!?;\n"]
+            ends = [m["text"].find(c, start + len(fact.passage) - 1) for c in ".!?;\n"]
             end = min((x for x in ends if x >= 0), default=len(m["text"]) - 1) + 1
             sentence = m["text"][left:end]
             if re.search(r"\?|\b(maybe|perhaps|might|could|what if|suppose|imagine)\b", sentence, re.I):
-                raise Rejected("A question or hypothetical cannot become an asserted memory.")
+                raise MemoryGroundingRejected("A question or hypothetical cannot become an asserted memory.")
             if fact.value.casefold() not in fact.passage.casefold():
-                raise Rejected("Memory value must occur in its exact user source.")
+                raise MemoryGroundingRejected("Memory value must occur in its exact user source.")
             if fact.kind != "procedural" and re.search(r"\b(not|never|don't|do not|no longer)\b", sentence, re.I):
-                raise Rejected("Negated statements need a clear positive correction before storing a fact.")
+                raise MemoryGroundingRejected("Negated statements need a clear positive correction before storing a fact.")
             subject = " ".join(fact.subject.casefold().split())
             relation = "_".join(fact.relation.casefold().split())
             if fact.memory_key:
@@ -184,10 +200,14 @@ def apply(s, kind, p, oid):
             slots[key] = vid
             saved.append(vid)
         turn_id = "turn_" + oid
+        warnings=p.get("memory_warnings",[])
+        if not isinstance(warnings,list) or len(warnings)>8 or any(not isinstance(w,str) or len(w)>800 for w in warnings):
+            raise Rejected("Invalid memory warning metadata.")
         s.setdefault("chat_turns", {})[turn_id] = {"id": turn_id, "thread": p["thread"],
             "agent_role": p["agent_role"], "message": p["message"], "reply": response.reply,
             "citations": response.citations, "retrieved": p["retrieved"], "saved": saved,
             "suggested_task": response.suggested_task, "provider": p["provider"],
+            "memory_warnings": warnings,
             "recorded_at": now(), "handoff": None}
         return {"turn": turn_id, "saved": saved}, True
 
@@ -201,14 +221,18 @@ def apply(s, kind, p, oid):
 
     if kind == "message":
         mid = identifier(p["id"])
-        if p["speaker"] not in {"user", "assistant"} or not p["text"].strip():
+        if p["speaker"] not in {"user", "assistant", "transcript"} or not p["text"].strip():
             raise Rejected("A nonempty user or assistant message is required.")
         m = {"id": mid, "text": p["text"], "speaker": p["speaker"], "recorded_at": now(),
-             "provenance": "user_assertion" if p["speaker"] == "user" else "assistant_suggestion"}
+             "provenance": {"user":"user_assertion", "assistant":"assistant_suggestion", "transcript":"external_transcript"}[p["speaker"]]}
+        if "metadata" in p:
+            m["metadata"] = p["metadata"]
         if mid in s["messages"]:
             existing = s["messages"][mid]
             if (existing["text"], existing["speaker"]) != (p["text"], p["speaker"]):
                 raise Conflict("Message identity conflict.")
+            if existing.get("metadata", {}) != p.get("metadata", {}):
+                raise Conflict("Message source metadata conflict.")
         else:
             s["messages"][mid] = m
         return {"message": mid}, False

@@ -102,7 +102,8 @@ st.sidebar.caption("Local profile selector; this is not a login system.")
 st.sidebar.markdown("---")
 st.sidebar.subheader("🤖 Model Router")
 model_options = {
-    "Auto-Router (Gemini + OpenRouter Fallbacks)": ("auto", None),
+    "Auto-Router (Gemini, NVIDIA, OpenRouter)": ("auto", None),
+    "NVIDIA Direct — Nemotron 3.5 Super VL": ("nvidia", None),
     "NVIDIA Nemotron 3.5 Super VL (OpenRouter Free)": ("openrouter", "nvidia/nemotron-3.5-super-vl:free"),
     "Google Gemini 3.8 Flash (Preferred)": ("gemini", "gemini-3.8-flash"),
     "OpenRouter Free Meta-Router": ("openrouter", "openrouter/free"),
@@ -110,7 +111,7 @@ model_options = {
 selected_model_label = st.sidebar.selectbox("Active Provider", list(model_options.keys()), index=0)
 pref_provider, pref_model = model_options[selected_model_label]
 active_router = actions.get_model(model_name=pref_model, preferred_provider=None if pref_provider == "auto" else pref_provider)
-st.sidebar.caption("Your AI provider receives your message and the relevant saved memories. Failed calls use a bounded fallback budget.")
+st.sidebar.caption("Your AI provider receives your message and the relevant saved memories. Failed calls use a bounded fallback budget. NVIDIA Direct uses NVIDIA_API_KEY, separately from OpenRouter.")
 
 st.sidebar.caption("🛡️ Standby fallback chain: Gemini ➔ NVIDIA Nemotron ➔ Nemotron Lightning ➔ OpenRouter Free.")
 
@@ -180,6 +181,11 @@ if page == "Workspace":
                 st.caption(turn["agent_role"] + " - " + turn["provider"])
                 if turn["saved"]:
                     st.caption("Saved " + str(len(turn["saved"])) + " sourced memories.")
+                if turn.get("memory_warnings"):
+                    st.warning(f"Saved {len(turn['saved'])} verified memories. Skipped {len(turn['memory_warnings'])} proposed memories that could not be verified against your message.")
+                    with st.expander("Which memory proposals were skipped?"):
+                        for warning in turn["memory_warnings"]:
+                            st.write(warning)
                 evidence_ids = list(dict.fromkeys(turn["saved"] + turn["citations"]))
                 if evidence_ids:
                     with st.expander("Memory and sources used for this answer"):
@@ -475,6 +481,35 @@ elif page == "Memory":
 # ----------------- BENCHMARK PAGE -----------------
 elif page == "Benchmark":
     st.header("Memory & Model Router Evaluation")
+    from pathlib import Path
+    st.subheader("LoCoMo: actual saved evaluation results")
+    completed_runs = sorted(Path("benchmark-runs").glob("locomo*/score.json"), key=lambda p:p.stat().st_mtime, reverse=True)
+    if completed_runs:
+        chosen_run = st.selectbox("Completed LoCoMo run", [p.parent.name for p in completed_runs], key="locomo_run")
+        result_path = next(p for p in completed_runs if p.parent.name == chosen_run)
+        try:
+            score = json.loads(result_path.read_text(encoding="utf-8"))
+            st.caption(f"Pilot subset: {score['sample_id']}, {len(score['selected_ids'])} questions per method. Model: {score['model']}. Judge: {score['judge_model']}.")
+            st.warning("This is our local pilot, not a reproduction of Mem0's published score or a global leaderboard ranking. Token F1 and judge correctness are different metrics.")
+            if score.get("evaluation_degraded") or any(r.get("answer_errors") or r.get("judge_errors") for r in score["results"].values()):
+                st.error("DEGRADED RUN: provider/import/judge failures prevent a reliable memory-quality comparison. The numeric totals include failures; they are not a fair quality score.")
+            table = []
+            for method, result in score["results"].items():
+                table.append({"Method": "Continuity graph memory" if method == "graph" else "Same model without memory",
+                    "Questions": result["questions"], "Token F1 (%)": result["token_f1_percent"],
+                    "Local judge correctness (%)": result["local_judge_accuracy_percent"],
+                    "Answer errors": result["answer_errors"], "Judge errors": result["judge_errors"],
+                    "Mean answer seconds": result["mean_answer_seconds"]})
+            st.dataframe(pd.DataFrame(table), hide_index=True)
+            if score.get("ingestion_errors"):
+                st.error(f"Import failures: {score['ingestion_errors']} of {score['planned_chunks']} chunks. Read the report before interpreting quality.")
+            st.caption(f"Current memories: {score['current_memories']}. Source proposals rejected: {score['source_rejections']}. See the per-question predictions and protocol in the run directory.")
+            st.download_button("Download LoCoMo scores", result_path.read_text(encoding="utf-8"), file_name="continuity-locomo-score.json", mime="application/json")
+        except (ValueError, KeyError):
+            st.info("The result file is being written or uses another format. Refresh after the run finishes.")
+    else:
+        st.info("No completed LoCoMo score yet. When the current run finishes, use Refresh memory to load its actual results here.")
+    st.markdown("---")
     st.write("Comparative evaluation of memory retrieval across Google Gemini and OpenRouter free models.")
 
     b1, b2 = st.columns(2)

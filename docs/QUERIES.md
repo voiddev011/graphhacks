@@ -3,6 +3,34 @@
 Open the graph printed by `doctor` in FalkorDB Browser. These are read-only demo
 queries. The app uses fixed query text with parameters; it never executes model-generated Cypher.
 
+Current conversational memories, their entities and original messages (returns
+nodes so FalkorDB Browser can draw the graph):
+
+```cypher
+MATCH (slot:MemorySlot)-[:CURRENT]->(fact:MemoryVersion)
+OPTIONAL MATCH (fact)-[:SUBJECT|OBJECT]->(entity:Entity)
+OPTIONAL MATCH (fact)-[:FROM_MESSAGE]->(message:Message)
+RETURN slot, fact, entity, message
+LIMIT 80
+```
+
+Conversational correction history (new value points to the earlier version):
+
+```cypher
+MATCH (current:MemoryVersion)-[:SUPERSEDES]->(earlier:MemoryVersion)
+RETURN current, earlier
+LIMIT 40
+```
+
+The exact conversation-memory versions recalled by saved handoffs:
+
+```cypher
+MATCH (handoff:Handoff)-[:RECALLED]->(fact:MemoryVersion)
+MATCH (fact)-[:FROM_MESSAGE]->(message:Message)
+RETURN handoff, fact, message
+LIMIT 40
+```
+
 Current decisions and their sources:
 
 ```cypher

@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "benchmark_page_actual_score_rows": [
+    {
+      "Method": "Continuity graph memory",
+      "Questions": 8,
+      "Token F1 (%)": 18.75,
+      "Local judge correctness (%)": 37.5,
+      "Answer errors": 0,
+      "Judge errors": 0,
+      "Mean answer seconds": 4.761
+    },
+    {
+      "Method": "Same model without memory",
+      "Questions": 8,
+      "Token F1 (%)": 0.0,
+      "Local judge correctness (%)": 0.0,
+      "Answer errors": 0,
+      "Judge errors": 0,
+      "Mean answer seconds": 4.156
+    }
+  ],
+  "incomplete_import_warning_visible": true,
+  "streamlit_health": 200,
+  "external_model_calls": 0,
+  "existing_user_graphs_changed": false
+}

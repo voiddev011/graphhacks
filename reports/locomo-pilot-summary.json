@@ -1,0 +1,87 @@
+{
+  "benchmark": "LoCoMo pilot subset",
+  "result_directory": "benchmark-runs\\locomo-gemini35lite-resumed-20261018",
+  "results": {
+    "graph": {
+      "questions": 8,
+      "token_f1_percent": 18.75,
+      "local_judge_accuracy_percent": 37.5,
+      "local_judge_complete": true,
+      "answer_errors": 0,
+      "judge_errors": 0,
+      "mean_answer_seconds": 4.761,
+      "mean_context_chars": 10272,
+      "per_category": {
+        "multi-hop": {
+          "questions": 2,
+          "token_f1_percent": 0.0,
+          "local_judge_accuracy_percent": 50.0
+        },
+        "temporal": {
+          "questions": 2,
+          "token_f1_percent": 0.0,
+          "local_judge_accuracy_percent": 0
+        },
+        "open-domain": {
+          "questions": 2,
+          "token_f1_percent": 0.0,
+          "local_judge_accuracy_percent": 0
+        },
+        "single-hop": {
+          "questions": 2,
+          "token_f1_percent": 75.0,
+          "local_judge_accuracy_percent": 100
+        }
+      },
+      "mean_input_tokens_successful": 5657.1,
+      "mean_output_tokens_successful": 55
+    },
+    "none": {
+      "questions": 8,
+      "token_f1_percent": 0.0,
+      "local_judge_accuracy_percent": 0,
+      "local_judge_complete": true,
+      "answer_errors": 0,
+      "judge_errors": 0,
+      "mean_answer_seconds": 4.156,
+      "mean_context_chars": 2,
+      "per_category": {
+        "multi-hop": {
+          "questions": 2,
+          "token_f1_percent": 0.0,
+          "local_judge_accuracy_percent": 0
+        },
+        "temporal": {
+          "questions": 2,
+          "token_f1_percent": 0.0,
+          "local_judge_accuracy_percent": 0
+        },
+        "open-domain": {
+          "questions": 2,
+          "token_f1_percent": 0.0,
+          "local_judge_accuracy_percent": 0
+        },
+        "single-hop": {
+          "questions": 2,
+          "token_f1_percent": 0.0,
+          "local_judge_accuracy_percent": 0
+        }
+      },
+      "mean_input_tokens_successful": 827,
+      "mean_output_tokens_successful": 33.2
+    }
+  },
+  "questions_per_method": 8,
+  "provider_calls_this_resumed_run": 20,
+  "extractor_model": "cohere/north-mini-code:free",
+  "reader_model": "gemini-3.5-flash-lite",
+  "judge_model": "gemini-3.5-flash",
+  "imported_chunks": 16,
+  "planned_chunks": 19,
+  "source_rejections": 190,
+  "current_memories": 52,
+  "qa_memory_unchanged": true,
+  "temporary_graph_deleted": true,
+  "evaluation_degraded": true,
+  "published_score_comparable": false
+}

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Continuity - architecture for the demo</title>
+<style>body{margin:0;background:#f4f8f6;color:#18382f;font-family:system-ui,Arial,sans-serif}main{max-width:1320px;margin:auto;padding:12px}svg{display:block;width:100%;height:auto}text{font-family:system-ui,Arial,sans-serif;fill:#18382f}.title{font-size:32px;font-weight:750}.head{font-size:24px;font-weight:700}.body{font-size:19px}.small{font-size:16px;fill:#506b61}.edge{fill:none;stroke:#4e6b61;stroke-width:2.8;marker-end:url(#arrow)}.node{stroke:#b5c8bf;stroke-width:1.5;rx:16}</style>
+<main><svg viewBox="0 0 1280 820" role="img" aria-labelledby="title description">
+<title id="title">Continuity architecture</title>
+<desc id="description">A message enters Streamlit. Python and LangGraph retrieve facts and conversation history from FalkorDB. A model router calls NVIDIA Direct, Gemini or OpenRouter. Python validates the response, saves accepted memories and returns the answer. Planner and Helper share graph-backed handoffs.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#4e6b61"/></marker></defs>
+<text x="40" y="38" class="title">Continuity: how a message becomes a remembered answer</text>
+<rect class="node" x="450" y="70" width="340" height="80" fill="#e1eefb"/>
+<text x="470" y="102" class="head">1. Streamlit interface</text><text x="470" y="130" class="body">You send a message or task</text>
+<path class="edge" d="M620 150V195"/>
+<rect class="node" x="450" y="195" width="340" height="110" fill="#ece7fa"/>
+<text x="470" y="229" class="head">2. Python + LangGraph</text><text x="470" y="258" class="body">Assistant, Planner or Helper</text><text x="470" y="286" class="small">Retrieve evidence; build bounded context</text>
+<path class="edge" d="M790 240H900"/><text x="810" y="226" class="small">Query</text>
+<path class="edge" d="M900 280H790"/><text x="810" y="303" class="small">Evidence</text>
+<rect class="node" x="900" y="195" width="330" height="335" fill="#d9f0e5"/>
+<text x="923" y="236" class="head">FalkorDB: shared memory</text>
+<text x="923" y="280" class="body">Facts and original sources</text><text x="923" y="321" class="body">Corrections and older versions</text><text x="923" y="362" class="body">Saved conversation turns</text><text x="923" y="403" class="body">Tasks and agent handoffs</text>
+<text x="923" y="452" class="small">Recent thread turns: short-term context</text><text x="923" y="477" class="small">Saved facts: long-term context</text><text x="923" y="510" class="small">Docker volume + AOF persistence</text>
+<path class="edge" d="M620 305V365"/>
+<rect class="node" x="450" y="365" width="340" height="85" fill="#ece7fa"/>
+<text x="470" y="400" class="head">3. Model router</text><text x="470" y="430" class="body">Call the selected provider</text>
+<rect class="node" x="40" y="345" width="330" height="150" fill="#fff0d4"/>
+<text x="62" y="380" class="head">AI model provider</text><text x="62" y="411" class="body">NVIDIA Direct / Gemini /</text><text x="62" y="438" class="body">OpenRouter</text><text x="62" y="470" class="small">Produces a structured response</text>
+<path class="edge" d="M450 395H370"/><path class="edge" d="M370 435H450"/>
+<text x="52" y="534" class="small">LangChain wraps Gemini;</text><text x="52" y="558" class="small">direct APIs use HTTP.</text>
+<path class="edge" d="M620 450V510"/>
+<rect class="node" x="450" y="510" width="340" height="110" fill="#e1eefb"/>
+<text x="470" y="546" class="head">4. Validate and commit</text><text x="470" y="577" class="body">Check sources and evidence IDs</text><text x="470" y="604" class="small">Guard versions; save accepted updates</text>
+<path class="edge" d="M790 565H1070V530"/><text x="850" y="594" class="small">Save accepted memory and turns</text>
+<path class="edge" d="M620 620V675"/>
+<rect class="node" x="450" y="675" width="340" height="85" fill="#e1eefb"/>
+<text x="470" y="710" class="head">5. Answer in the interface</text><text x="470" y="740" class="body">Reply with saved source evidence</text>
+<text x="40" y="799" class="small">Planner saves a handoff; Helper reads the task and current graph evidence. The user performs the suggested work.</text>
+</svg></main></html>

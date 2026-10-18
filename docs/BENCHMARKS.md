@@ -1,6 +1,11 @@
 # Testing and comparing Continuity
 
-Start with [the step-by-step testing guide](TESTING_GUIDE.md). The historical 3/3 synthetic scores are unverified because the previous judge ignored model verdicts. Fresh runs use a corrected local judge; they are not official evaluator results.
+For the new public-conversation pilot, read [LOCOMO.md](LOCOMO.md). It explains
+the real LoCoMo dataset, with-memory/no-memory comparison, score dashboard,
+source failures, and the frozen-memory resume command. Results are local subset
+measurements, not official leaderboard submissions.
+
+Start with [the short working-demo guide](DEMO_SCRIPT.md). Historical 3/3 synthetic scores were unverified because an earlier judge ignored model verdicts. Fresh runs use a corrected local judge; they are not official evaluator results.
 
 Three different results must stay separate:
 

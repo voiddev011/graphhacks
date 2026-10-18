@@ -79,9 +79,10 @@ def test_semantic_episodic_procedural_and_graph_connections(service):
     ("I do not own 2 restaurants.",fact("restaurant_count","2","own 2 restaurants")),
 ])
 def test_questions_inventions_and_negation_do_not_become_memories(service,text,proposal):
-    with pytest.raises(Rejected): send(service,text,[proposal])
+    receipt=send(service,text,[proposal])
     state=service.store.read()
-    assert not state.get("memory_slots") and not state.get("chat_turns")
+    assert not state.get("memory_slots") and not receipt["saved"]
+    assert state["chat_turns"][receipt["turn"]]["memory_warnings"]
 
 def test_next_work_question_does_not_create_fake_task(service):
     send(service,"What should I work on next?")
@@ -151,13 +152,31 @@ def test_concurrent_memories_merge_or_reject_conflicting_updates(service,same_sl
     assert len(state["memory_slots"])==(1 if same_slot else 2)
 
 
-def test_invalid_extraction_can_retry_without_freezing_bad_envelope(service):
+def test_invalid_extraction_is_skipped_and_accepted_turn_replays(service):
     rid=uuid.uuid4().hex
     bad=ResponseModel([fact("name","Alice","My name is Jack.")])
-    with pytest.raises(Rejected): chat(service,rid,"My name is Jack.",model=bad)
-    assert service.store.read()["requests"][rid]["envelope"] is None
-    receipt=chat(service,rid,"My name is Jack.",model=ResponseModel([fact("name","Jack","My name is Jack.")]))
-    assert receipt["saved"] and service.store.read()["requests"][rid]["calls"]==2
+    receipt=chat(service,rid,"My name is Jack.",model=bad)
+    assert not receipt["saved"] and not service.store.read().get("memory_slots")
+    assert service.store.read()["chat_turns"][receipt["turn"]]["memory_warnings"]
+    assert chat(service,rid,"My name is Jack.",model=bad)==receipt
+    assert len(bad.seen)==1 and service.store.read()["requests"][rid]["calls"]==1
+
+
+def test_bad_memory_does_not_discard_grounded_facts_or_reply(service):
+    text="i own a chinese and mexican estaurant"
+    proposals=[fact("restaurant_cuisine","chinese",text),fact("restaurant_count","2",text)]
+    proposals[0]["cardinality"]="many"
+    receipt=send(service,text,proposals)
+    state=service.store.read();turn=state["chat_turns"][receipt["turn"]]
+    assert len(receipt["saved"])==1 and len(turn["memory_warnings"])==1
+    assert state["memory_versions"][receipt["saved"][0]]["value"]=="chinese"
+    assert turn["reply"]=="I can help."
+
+
+def test_assertion_before_question_still_has_valid_source(service):
+    text="My name is Jack. Can you help?"
+    receipt=send(service,text,[fact("name","Jack","My name is Jack.")])
+    assert len(receipt["saved"])==1
 
 
 def test_explicit_correction_key_handles_different_model_relation_wording(service):

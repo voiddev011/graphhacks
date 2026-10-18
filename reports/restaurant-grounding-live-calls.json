@@ -1,0 +1,15 @@
+{
+  "provider_calls": 2,
+  "attempts": [
+    {
+      "stage": "chat_grounding_smoke",
+      "requested_model": "nim:nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "reserved_at": "2026-10-18T17:43:04.649292+00:00"
+    },
+    {
+      "stage": "chat_grounding_smoke",
+      "requested_model": "nim:nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "reserved_at": "2026-10-18T17:43:09.593292+00:00"
+    }
+  ]
+}

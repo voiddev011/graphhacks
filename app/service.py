@@ -27,10 +27,13 @@ class Service:
             raise Rejected("Command exceeds the prototype's 32,000-character ceiling.")
         return self.store.execute(kind, payload, operation_id or new_id())
 
-    def message(self, text, speaker="user", request_id=None):
+    def message(self, text, speaker="user", request_id=None, metadata=None):
         rid = request_id or new_id()
         mid = "msg_" + digest([rid, "source"])[:40]
-        self.command("message", {"id": mid, "speaker": speaker, "text": text}, operation(rid, "message"))
+        payload = {"id": mid, "speaker": speaker, "text": text}
+        if metadata is not None:
+            payload["metadata"] = metadata
+        self.command("message", payload, operation(rid, "message"))
         return mid
 
     def begin(self, request_id, role, text, handoff=None, owner=None, focus_task=None):

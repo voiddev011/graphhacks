@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "input": "i own a chinese and mexican estaurant",
+  "saved_facts": [
+    {
+      "relation": "restaurant_cuisine",
+      "value": "Chinese"
+    },
+    {
+      "relation": "restaurant_cuisine",
+      "value": "Mexican"
+    }
+  ],
+  "new_thread_reply": "Your restaurants serve Chinese and Mexican cuisine.",
+  "citations": [
+    "fact_2e17e6bab87de3fc769b4bccd7d904f47b10fd00",
+    "fact_d08b782a71414d36c185787a6e0b817e15c5f831"
+  ],
+  "memory_warnings": [],
+  "provider_calls": 2,
+  "is_public_benchmark": false,
+  "temporary_graph_deleted": true
+}

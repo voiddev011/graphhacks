@@ -1,0 +1,8 @@
+{
+  "dataset_pinned_revision_verified": true,
+  "revision": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+  "dataset_sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+  "official_scorer_sha256": "8e3be5d57ff2ff9ec5cd05939592f468c5f3f1fd95d13e431932bdf6bf0fd6fd",
+  "metric_comparisons": 24,
+  "all_passed": true
+}

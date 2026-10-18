@@ -1,0 +1,3 @@
+# Optional dependencies for LoCoMo token-F1 scoring.
+nltk==3.10.3
+regex==2026.9.29

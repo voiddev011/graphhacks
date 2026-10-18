@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "requested_model": "nim:nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "reported_model": "private/nvidia/nemotron-3.5-super-120b-a12b",
+  "provider_calls": 2,
+  "saved_memories": 1,
+  "new_thread_helper_reply": "Your name is Priya.",
+  "source_citations": [
+    "fact_c746a0c7e9115d9548f9907bd2752f0bc157421e"
+  ],
+  "new_thread_recalled_graph_memory": true,
+  "is_public_benchmark": false,
+  "temporary_graph_deleted": true
+}

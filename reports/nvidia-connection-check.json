@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "provider": "NVIDIA direct",
+  "model": "private/nvidia/nemotron-3.5-super-120b-a12b",
+  "structured_output": {
+    "reply": "Agent memory stores facts, preferences, and past interactions so the assistant can recall them across conversations and respond more personally and consistently.",
+    "memories": [],
+    "citations": [],
+    "suggested_task": ""
+  },
+  "usage": {
+    "prompt_tokens": 1205,
+    "completion_tokens": 48,
+    "total_tokens": 1253,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": null,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": null
+    }
+  },
+  "elapsed_seconds": 5.98,
+  "external_calls": 1
+}

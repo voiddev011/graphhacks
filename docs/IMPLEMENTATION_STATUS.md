@@ -1,70 +1,51 @@
-# Final implementation status - 18 October 2026
+# Implementation and verification
 
-Continuity now supports natural conversation rather than keyword routing.
-The participant's existing .env and project data were retained. No commit,
-push, public deployment or hackathon submission was performed.
+Continuity runs locally with Python, Streamlit, LangChain, LangGraph and FalkorDB.
+It supports sourced conversation memories, corrections, new-thread recall,
+and shared Planner/Helper handoffs. NVIDIA Direct, Gemini and OpenRouter are supported.
 
-## Implemented
+## Saved evidence
 
-- Ordinary model-backed chat with durable successful user/assistant turns.
-- Conversation selector and New conversation; project memory survives new threads.
-- Semantic facts, episodic events and reusable user routines, all source-backed.
-- Versioned single-valued corrections with explicit memory-slot references;
-  named many-valued relationships coexist rather than overwrite each other.
-- Current memory/entity/source graph traversals supply context. Recent history
-  is sorted chronologically, not by snapshot dictionary keys.
-- Memory page shows a connected graph, current facts, sources and earlier values.
-- Assistant, Planner and Helper share memory. Task handoffs and drafts retain
-  the exact fact-version IDs they read; Helper reads current facts after a handoff.
-- Source/schema/scope validation, replay receipts, atomic optimistic commits,
-  conflicting-correction rejection, and a persisted three-attempt budget.
-- Existing technical-decision, prerequisite, claim, stale-draft and review rules.
-- Gemini/OpenRouter fallback. A selected OpenRouter model tries free standbys
-  before Google. Actual served model is retained with each chat turn.
-- CLI chat/memories commands; browser UI remains the easiest manual test.
+| Check | Actual result | Report in `reports/` |
+|---|---|---|
+| Full regression before NVIDIA support | 121 passed, 2 skipped | `locomo-full-regression.xml` |
+| Affected NVIDIA/routing/benchmark/UI checks | 41 passed | `nvidia-integration-tests.xml` |
+| Final NVIDIA-specific checks | 6 passed | `nvidia-provider-tests.xml` |
+| Coordination contracts | 14/14 | `scenario-results.json` |
+| Live memory and handoff scenario | 8/8 | `final-live-memory-v2.json` |
+| Real Streamlit execution checks | 5/5 | `final-live-ui-v3.json` |
+| NVIDIA fact-save and new-thread Helper recall | Passed, 2 real calls | `nvidia-live-memory-check.json` |
+| NVIDIA provider selector and HTTP health | Passed | `nvidia-ui-check.json` |
+| Exact restaurant message: save cuisines and recall in a new thread | Passed, 2 real NVIDIA calls | `restaurant-grounding-live-check.json` |
+| Invalid-proposal UI warning and valid fact retained | 2 passed | `chat-grounding-warning-ui-tests.xml` |
+| Affected chat, LoCoMo, UI and workflow regression | 86 passed | `chat-grounding-fix-tests.xml` |
+| Original LoCoMo scorer parity | 24 comparisons passed | `locomo-scorer-parity.json` |
 
-## Evidence
+These checks have different scopes; their counts must not be added into one accuracy score.
+AppTest verifies Streamlit execution, not a visual browser screenshot review.
 
-Full final regression run: **111 passed, 2 skipped**, zero failures/errors:
-`reports/final-tests.xml`. The two skips are the RAM parameter of a graph-only
-retrieval test and the separately gated live-Gemini test. Live models were tested
-separately below. A focused final UI/routing rerun passed **20/20** and covers later polish and
-new-conversation retention. Across the latest results per test there are **114 passed, 2 skipped, 0 failed**; see `reports/final-ui-routing.xml` and the combined
-latest-result summary in `reports/final-verification.json`.
+Chat now skips individually ungrounded memory proposals with a visible warning
+while preserving grounded facts and the reply. Unknown citations, stale evidence,
+and conflicting updates still reject the turn. An assertion ending with a period
+is no longer rejected merely because the next sentence is a question.
 
-**14/14 coordination contracts** passed on actual FalkorDB, zero model calls:
-`reports/scenario-results.json`. Tests use temporary graphs, not the open project.
+## Benchmark limits
 
-**8/8 live end-to-end checks passed**, using real OpenRouter models and ten total
-provider attempts including fallback failures: `reports/final-live-memory-v2.json`.
-They cover natural-message extraction, fresh Python-process recall, new Helper
-conversation recall, 2-to-3 correction/history, new Planner recall, saved evidence,
-Planner-to-Helper handoff and project isolation. Earlier failed runs were preserved.
+The LoCoMo pilot tested **8 unique questions**, each with and without memory.
+Graph memory: **18.75% token F1 / 37.5% local-judge accuracy**. Baseline: **0% / 0%**.
+Answering and judging had no API errors, but the earlier memory import failed
+on 3 of 19 chunks and rejected 190 proposals. This is an incomplete-import pilot,
+not a full benchmark or a result comparable with Mem0's published score.
 
-**5/5 real Streamlit AppTest checks passed**, one actual free-provider call:
-`reports/final-live-ui-v3.json`. The returned model was
-`cohere/north-mini-code:free` via `openrouter/free`. It saved the ordinary personal
-message, retained memory after New conversation, and rendered sources and graph
-after UI reload. This is UI execution evidence, not a browser screenshot review.
+See [the results](../reports/LOCOMO_RESULTS.md) and [repeat commands](LOCOMO.md).
+The NVIDIA smoke checks did not rerun or improve those benchmark scores.
 
-`pip check`: no broken requirements. The app was restarted after changes. See the
-final verification JSON for current HTTP health and focused-check counts.
+## Prototype limits
 
-## Honest limits
+Profiles are selectors, not authentication. Models can miss facts; retrieval is
+bounded lexical/entity selection. Whole-project graph/snapshot commits suit
+small projects. The agents suggest work; people execute it. High-load operation,
+public deployment and independent verification of user claims are not demonstrated.
 
-- Local profile selector, not authentication; keep localhost bindings.
-- Small-project whole-snapshot/projection commits; no high-load throughput claim.
-- Bounded lexical/entity retrieval and model extraction can miss or misinterpret
-  facts. Conservative source checks may reject ambiguous wording.
-- User assertions and outcome reports are not independently verified.
-- General conversation facts are advisory; explicit technical dependencies retain
-  their separate completion/review rules.
-- No code-execution tool, background autonomous worker, graph checkpoint saver,
-  public deployment or official leaderboard result is claimed.
-- Free-provider latency, rate limits and malformed responses occurred. Failures
-  consume budget; the app never substitutes scripted answers. The corrected
-  local QA judge uses valid OpenRouter roles and consumes real verdicts; old
-  heuristic/three-fixture scores remain unverified historical results.
-
-Follow [QUICKSTART.md](QUICKSTART.md) to test manually and
-[DEMO_SCRIPT.md](DEMO_SCRIPT.md) to record your hackathon demo.
+Use [the recording script](DEMO_SCRIPT.md) for the working demo. No automated
+commit, push, repository-visibility change or hackathon submission was performed.

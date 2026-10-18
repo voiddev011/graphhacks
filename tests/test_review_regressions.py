@@ -5,6 +5,7 @@ from benchmarks import judge
 
 
 def test_each_standby_reserves_a_slot(service, monkeypatch):
+    monkeypatch.delenv('NVIDIA_API_KEY',raising=False)
     monkeypatch.setenv('GOOGLE_API_KEY','test-only')
     monkeypatch.setenv('OPENROUTER_API_KEY','test-only')
     calls=[]
