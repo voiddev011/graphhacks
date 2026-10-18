@@ -1,0 +1,85 @@
+{
+  "suite": "continuity-contracts-v1",
+  "kind": "synthetic deterministic contract checks",
+  "external_benchmark": false,
+  "model_calls": 0,
+  "backend": "FalkorDB",
+  "recorded_at": "2026-10-18T12:06:47.606810+00:00",
+  "planned_checks": 14,
+  "passed": 14,
+  "executed": 14,
+  "pass_rate": 1.0,
+  "elapsed_seconds": 0.536,
+  "checks": [
+    {
+      "check": "Current decision has an exact source",
+      "passed": true,
+      "detail": "Factual memory retains its user assertion."
+    },
+    {
+      "check": "Unfinished prerequisites block deployment",
+      "passed": true,
+      "detail": "Deployment requires accepted interface and storage results."
+    },
+    {
+      "check": "A new service can load the handoff",
+      "passed": true,
+      "detail": "This checks a new service object; process restart is a separate integration check."
+    },
+    {
+      "check": "Presentation changes preserve technical validity",
+      "passed": true,
+      "detail": "Only declared implementation inputs invalidate work."
+    },
+    {
+      "check": "Claim uses its new execution version",
+      "passed": true,
+      "detail": "Claiming does not invalidate itself."
+    },
+    {
+      "check": "A draft does not complete a task",
+      "passed": true,
+      "detail": "Assistant suggestions remain drafts."
+    },
+    {
+      "check": "Valid completed prerequisites unblock deployment",
+      "passed": true,
+      "detail": "Both prerequisites now have accepted user-reported outcomes."
+    },
+    {
+      "check": "Retry has one logical effect",
+      "passed": true,
+      "detail": "Same operation ID/hash returns the old receipt without another version bump."
+    },
+    {
+      "check": "Changed retry payload is rejected",
+      "passed": true,
+      "detail": "ID reuse cannot change the accepted command."
+    },
+    {
+      "check": "Correction preserves prior decision history",
+      "passed": true,
+      "detail": "React remains historical; Streamlit is current."
+    },
+    {
+      "check": "Affected result requires review",
+      "passed": true,
+      "detail": "The old result is retained."
+    },
+    {
+      "check": "Review-required prerequisite blocks deployment",
+      "passed": true,
+      "detail": "A changed decision cannot silently validate earlier work."
+    },
+    {
+      "check": "Explicit compatibility review unblocks deployment",
+      "passed": true,
+      "detail": "A user judgment validates compatibility; it does not claim a rebuild."
+    },
+    {
+      "check": "Review preserves original result inputs",
+      "passed": true,
+      "detail": "Review coverage is appended separately from the original evidence."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+.venv/
+.tools/
+__pycache__/
+.pytest_cache/
+.env
+*.pyc
+artifacts/
+*.egg-info/
+benchmark-data/
+benchmark-runs/
+.streamlit/secrets.toml
+.local-backups/

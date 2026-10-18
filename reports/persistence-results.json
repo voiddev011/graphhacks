@@ -1,0 +1,19 @@
+{
+  "recorded_at": "2026-10-18T11:14:47.567081+00:00",
+  "graceful_restart_state_hash_preserved": true,
+  "fresh_process_helper_resumed": true,
+  "provider": "scripted DemoModel, not live Gemini",
+  "handoff": "handoff_76f1b44e09dc88e08ffad82a9224d46d7d6c7957eb6e5ad200731302d176a20d",
+  "receipt": {
+    "kind": "draft",
+    "operation_id": "40e038e7b8d2ff43764538fb3c3964e5c100cd05ce497aaa3a59e94caebebfd8",
+    "accepted": true,
+    "attempt": "attempt_40e038e7b8d2ff43764538fb3c3964e5c100cd05ce497aaa3a59e94caebebfd8",
+    "completed": false
+  },
+  "data_dir": "/data",
+  "appendonly": "yes",
+  "appendfsync": "everysec",
+  "container_recreation_state_hash_preserved": true,
+  "recreation_verified_at": "2026-10-18T11:17:36.439086+00:00"
+}

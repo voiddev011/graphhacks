@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "provider": "live Gemini",
+  "initial_tasks": 0,
+  "tasks_after_user_request": 1,
+  "provider_calls": 1,
+  "sample_tasks_loaded": false,
+  "verification_graph_removed_afterwards": true
+}

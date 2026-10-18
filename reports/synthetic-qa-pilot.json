@@ -1,0 +1,24 @@
+{
+  "kind": "one bundled synthetic QA case; not an official benchmark",
+  "cases": 1,
+  "model": "gemini-3.8-flash",
+  "provider_calls": 1,
+  "prediction": {
+    "question_id": "synthetic_update_01",
+    "hypothesis": "The Atlas project now uses FalkorDB."
+  },
+  "citations": [
+    "session_0001"
+  ],
+  "usage": {
+    "input_tokens": 190,
+    "output_tokens": 24,
+    "total_tokens": 214,
+    "input_token_details": {
+      "cache_read": 0
+    }
+  },
+  "elapsed_seconds": 63.6479,
+  "official_score": null,
+  "assessment": "Manual inspection: answer matches the synthetic FalkorDB correction fixture; no automated judge run."
+}

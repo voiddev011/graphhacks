@@ -1,0 +1,225 @@
+{
+  "recorded_at": "2026-10-18T12:32:37.919452+00:00",
+  "python": "3.13.9",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "unit_run": {
+    "tests": 50,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 25,
+    "passed": 25
+  },
+  "database": "Verified on real FalkorDB 4.22.1: contract suite, fresh process, graceful restart, container replacement",
+  "live_gemini": {
+    "user_reported_task_flow": "Planner and Helper succeeded in pasted terminal output",
+    "synthetic_QA_pilot": "passed one live answer; see reports/synthetic-qa-pilot.json",
+    "official_external_benchmark_score": null
+  },
+  "checkpoint": "Deferred; fresh-workflow business handoff fallback",
+  "packages": {
+    "falkordb": "1.8.0",
+    "langchain": "1.4.6",
+    "langchain-core": "1.6.12",
+    "langchain-google-genai": "4.4.2",
+    "langgraph": "1.2.16",
+    "pydantic": "2.14.1",
+    "pytest": "9.1.1",
+    "streamlit": "1.66.0"
+  },
+  "container": {
+    "requested_image": "falkordb/falkordb:v4.22.1",
+    "digest": "sha256:b0bdcac2cbaff989e77cb0610439b7a9289e86de033ccbbd4368b66fb680ae7a",
+    "tested": true,
+    "module_version": 42201,
+    "host_port": 6380,
+    "data_dir": "/data",
+    "volume": "graph-hacks_continuity_data",
+    "aof": "yes",
+    "appendfsync": "everysec"
+  },
+  "git_sha": null,
+  "additional_checks": {
+    "compileall": "passed",
+    "pip_check": "No broken requirements found",
+    "offline_walkthrough": "passed with scripted model and RAM; not integration evidence",
+    "markdown_links_fences": "passed",
+    "fresh_process_helper": "passed with scripted model and real FalkorDB",
+    "graceful_restart": "exact state hash retained",
+    "container_replacement": "exact state hash retained",
+    "browser_http": 200,
+    "cli_scripted_plan": "passed against real FalkorDB"
+  },
+  "unit_command": "PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .tools/python/python.exe -m pytest -q --junitxml=reports/unit-results.xml",
+  "database_run": {
+    "tests": 50,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 49
+  },
+  "database_command": "CONTINUITY_DB_TESTS=1 PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .tools/python/python.exe -m pytest -q --junitxml=reports/database-results.xml",
+  "streamlit": {
+    "version": "1.66.0",
+    "url": "http://localhost:8501",
+    "test_suite": {
+      "tests": 66,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2,
+      "passed": 64
+    },
+    "report": "reports/ui-database-results.xml",
+    "focused_report": "reports/ui-adapter-final.xml",
+    "backend": "RAM and real FalkorDB; scripted UI tests",
+    "start_command": ".\\ui.ps1",
+    "health_http": 200
+  },
+  "earlier_live_gemini": {
+    "status": "generation failed; not verified",
+    "model": "gemini-3.8-flash",
+    "model_lookup": "passed: key/model recognized by Google",
+    "generation_error": "504 DEADLINE_EXCEEDED",
+    "generation_tests_attempted": 2,
+    "settings": {
+      "timeout_seconds": 90,
+      "thinking_level": "low",
+      "max_output_tokens": 1800,
+      "max_retries": 0
+    },
+    "report": "reports/live-results.xml"
+  },
+  "scenario_checks": {
+    "suite": "continuity-contracts-v1",
+    "kind": "synthetic deterministic contract checks",
+    "external_benchmark": false,
+    "model_calls": 0,
+    "backend": "FalkorDB",
+    "recorded_at": "2026-10-18T12:06:47.606810+00:00",
+    "planned_checks": 14,
+    "passed": 14,
+    "executed": 14,
+    "pass_rate": 1.0,
+    "elapsed_seconds": 0.536,
+    "checks": [
+      {
+        "check": "Current decision has an exact source",
+        "passed": true,
+        "detail": "Factual memory retains its user assertion."
+      },
+      {
+        "check": "Unfinished prerequisites block deployment",
+        "passed": true,
+        "detail": "Deployment requires accepted interface and storage results."
+      },
+      {
+        "check": "A new service can load the handoff",
+        "passed": true,
+        "detail": "This checks a new service object; process restart is a separate integration check."
+      },
+      {
+        "check": "Presentation changes preserve technical validity",
+        "passed": true,
+        "detail": "Only declared implementation inputs invalidate work."
+      },
+      {
+        "check": "Claim uses its new execution version",
+        "passed": true,
+        "detail": "Claiming does not invalidate itself."
+      },
+      {
+        "check": "A draft does not complete a task",
+        "passed": true,
+        "detail": "Assistant suggestions remain drafts."
+      },
+      {
+        "check": "Valid completed prerequisites unblock deployment",
+        "passed": true,
+        "detail": "Both prerequisites now have accepted user-reported outcomes."
+      },
+      {
+        "check": "Retry has one logical effect",
+        "passed": true,
+        "detail": "Same operation ID/hash returns the old receipt without another version bump."
+      },
+      {
+        "check": "Changed retry payload is rejected",
+        "passed": true,
+        "detail": "ID reuse cannot change the accepted command."
+      },
+      {
+        "check": "Correction preserves prior decision history",
+        "passed": true,
+        "detail": "React remains historical; Streamlit is current."
+      },
+      {
+        "check": "Affected result requires review",
+        "passed": true,
+        "detail": "The old result is retained."
+      },
+      {
+        "check": "Review-required prerequisite blocks deployment",
+        "passed": true,
+        "detail": "A changed decision cannot silently validate earlier work."
+      },
+      {
+        "check": "Explicit compatibility review unblocks deployment",
+        "passed": true,
+        "detail": "A user judgment validates compatibility; it does not claim a rebuild."
+      },
+      {
+        "check": "Review preserves original result inputs",
+        "passed": true,
+        "detail": "Review coverage is appended separately from the original evidence."
+      }
+    ]
+  },
+  "benchmark_adapter": {
+    "methods": [
+      "graph",
+      "bm25",
+      "full",
+      "none"
+    ],
+    "data_exercised": "bundled synthetic examples only",
+    "retrieval_dry_run_cases": 3,
+    "live_cases": 1,
+    "official_judge": "not run",
+    "leaderboard_submission": false
+  },
+  "final_ui_adapter_tests": {
+    "report": "reports/ui-adapter-final.xml",
+    "tests": 16,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 15
+  },
+  "final_benchmark_adapter_tests": {
+    "report": "reports/benchmark-adapter-final.xml",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 6
+  },
+  "live_only": {
+    "tests": {
+      "tests": 67,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2,
+      "passed": 65
+    },
+    "report": "reports/live-only-results.xml",
+    "sample_projects_cleared": [
+      "apollo"
+    ],
+    "default_project": "my_project",
+    "preloaded_tasks": 0,
+    "preloaded_messages": 0,
+    "scripted_answer_controls": false,
+    "fixtures_location": "tests/ only",
+    "streamlit_restarted": true,
+    "health_http": 200
+  }
+}

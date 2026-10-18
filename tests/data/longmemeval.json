@@ -1,0 +1,38 @@
+[
+  {
+    "question_id": "synthetic_update_01",
+    "question_type": "knowledge-update",
+    "question": "Which database does the Atlas project use now?",
+    "question_date": "2026/10/18",
+    "answer": "FalkorDB",
+    "haystack_session_ids": ["a", "b"],
+    "haystack_dates": ["2026/10/10", "2026/10/17"],
+    "haystack_sessions": [
+      [{"role": "user", "content": "For the Atlas project, I selected SQLite as the database."}, {"role": "assistant", "content": "I can help plan the database tasks."}],
+      [{"role": "user", "content": "Correction: the Atlas project now uses FalkorDB instead of SQLite.", "has_answer": true}]
+    ],
+    "answer_session_ids": ["b"]
+  },
+  {
+    "question_id": "synthetic_fact_02",
+    "question_type": "single-session-user",
+    "question": "Which interface framework did I choose for the Orion project?",
+    "question_date": "2026/10/18",
+    "answer": "Streamlit",
+    "haystack_session_ids": ["c"],
+    "haystack_dates": ["2026/10/16"],
+    "haystack_sessions": [[{"role": "user", "content": "For the Orion project interface, I choose Streamlit.", "has_answer": true}]],
+    "answer_session_ids": ["c"]
+  },
+  {
+    "question_id": "synthetic_unknown_03_abs",
+    "question_type": "single-session-user",
+    "question": "What is my favorite colour?",
+    "question_date": "2026/10/18",
+    "answer": "The conversation does not state a favorite colour.",
+    "haystack_session_ids": ["d"],
+    "haystack_dates": ["2026/10/15"],
+    "haystack_sessions": [[{"role": "user", "content": "I have 30 minutes available to study Python today."}]],
+    "answer_session_ids": []
+  }
+]

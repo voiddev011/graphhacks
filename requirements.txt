@@ -1,0 +1,10 @@
+# Resolve in a clean virtual environment, then freeze tested versions to requirements.lock.
+falkordb>=1.2,<2
+langchain>=1,<2
+langchain-google-genai>=4,<5
+langgraph>=1,<2
+pydantic>=2,<3
+python-dotenv>=1,<2
+pytest>=8,<10
+streamlit>=1.50,<2
+    
