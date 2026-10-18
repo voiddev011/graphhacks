@@ -8,6 +8,8 @@ history. Planner and Helper share that memory and pass project work between them
 in [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md). This prototype runs locally; setup is
 below. A public demo video link has not yet been added.
 
+![Continuity: how a message becomes a remembered answer](docs/continuity-diagram.png)
+
 ## Open the app
 
 ```powershell
