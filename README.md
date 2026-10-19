@@ -247,8 +247,3 @@ Graceful restart and container replacement with the retained volume have been
 verified. Every-second flushing allows recent-data loss on hard crashes. Keep the
 volume when stopping the service. Example graph reads: [QUERIES.md](docs/QUERIES.md).
 
-## Hackathon disclosure
-
-Intended Track 2 submission; nothing has been submitted or publicly deployed.
-Codex assisted with planning, code, tests and documentation. The participant must
-understand and adapt the implementation, record a demo and disclose assistance.
